@@ -3,6 +3,8 @@
 
 #include "HUD/DefaultHUD.h"
 #include  "Blueprint/WidgetLayoutLibrary.h"
+#include "CommanderPawn.h"
+#include "Kismet/GameplayStatics.h"
 
 ADefaultHUD::ADefaultHUD()
 {
@@ -21,6 +23,17 @@ void ADefaultHUD::StartSelection_Implementation()
 
 void ADefaultHUD::StopSelection_Implementation()
 {
+	// get units under selection rect
+	TArray<TObjectPtr<APawn>> selectedPawns, selectedUnits;
+	GetActorsInSelectionRectangle<APawn>(pointA, pointB, selectedPawns);
+	for (auto& pawn : selectedPawns)
+	{
+		if (pawn->Tags.Contains(FName("Character")))
+			selectedUnits.Add(pawn);
+	}
+
+	Cast<ACommanderPawn>(GetOwningPawn())->SetUnitsUnderCommand(selectedUnits);
+
 	isDrawing = false;
 }
 

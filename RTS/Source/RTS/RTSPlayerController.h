@@ -78,6 +78,7 @@ protected:
 	// sadly blueprint doesn't accept a pointer to TArray
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Debug)
 	TArray<TObjectPtr<APawn>> unitsUnderControlForBlueprint;
+
 private:
 	FVector CachedDestination;
 	TObjectPtr<ACommanderPawn> playerPawn;
