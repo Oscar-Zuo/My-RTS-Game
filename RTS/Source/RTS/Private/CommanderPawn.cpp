@@ -94,8 +94,8 @@ void ACommanderPawn::MoveCamera(float DeltaTime)
 	axisValue.Set(FMath::Clamp(axisValue.X, 0, viewportSize.X), FMath::Clamp(axisValue.Y, 0, viewportSize.Y));
 	float resultX, resultY;
 
-	// If cursor is reached or inside boundary of screen, then move camera
-	// Get normalized direction vector
+	// If cursor is reached or inside boundary of screen, move camera
+
 	//Up
 	if (axisValue.X <= moveCameraScreenBoundary.X)
 	{

@@ -23,26 +23,33 @@ void ADefaultHUD::StartSelection_Implementation()
 
 void ADefaultHUD::StopSelection_Implementation()
 {
-	// get units under selection rect
-	TArray<TObjectPtr<APawn>> selectedPawns, selectedUnits;
-	GetActorsInSelectionRectangle<APawn>(pointA, pointB, selectedPawns);
-	for (auto& pawn : selectedPawns)
-	{
-		if (pawn->Tags.Contains(FName("Character")))
-			selectedUnits.Add(pawn);
-	}
-
-	Cast<ACommanderPawn>(GetOwningPawn())->SetUnitsUnderCommand(selectedUnits);
-
 	isDrawing = false;
 }
 
 void ADefaultHUD::DrawHUD()
 {
+	Super::DrawHUD();
 	if (isDrawing)
 	{
 		pointB = UWidgetLayoutLibrary::GetMousePositionOnViewport(GetWorld()) * UWidgetLayoutLibrary::GetViewportScale(GetWorld());
-		DrawRect(selectionRectColor, pointA.X, pointA.Y, pointB.X - pointA.X, pointB.Y - pointA.Y);
+
+		if (FVector2D::Distance(pointA, pointB) >= 10)
+		{
+			DrawRect(selectionRectColor, pointA.X, pointA.Y, pointB.X - pointA.X, pointB.Y - pointA.Y);
+
+			// get selected pawns
+			TArray<TObjectPtr<APawn>> selectedPawns, selectedUnits;
+			GetActorsInSelectionRectangle<APawn>(pointA, pointB, selectedPawns);
+			selectedUnits.Empty();
+			for (auto& pawn : selectedPawns)
+			{
+				if (pawn->Tags.Contains(FName("Character")))
+				{
+					selectedUnits.Add(pawn);
+				}
+			}
+			Cast<ACommanderPawn>(GetOwningPawn())->SetUnitsUnderCommand(selectedUnits);
+		}
 	}
 }
 

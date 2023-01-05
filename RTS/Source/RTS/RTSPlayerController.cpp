@@ -54,9 +54,9 @@ void ARTSPlayerController::SetupInputComponent()
 		// Setup mouse input events
 		// Select destination events
 		EnhancedInputComponent->BindAction(SelectClickAction, ETriggerEvent::Started, this, &ARTSPlayerController::OnSelectClicked);
-		EnhancedInputComponent->BindAction(SelectClickAction, ETriggerEvent::Started, this, &ARTSPlayerController::OnSelectDragging);
-		EnhancedInputComponent->BindAction(SelectClickAction, ETriggerEvent::Completed, this, &ARTSPlayerController::OnSelectStopDragging);
-		EnhancedInputComponent->BindAction(SelectClickAction, ETriggerEvent::Canceled, this, &ARTSPlayerController::OnSelectStopDragging);
+		EnhancedInputComponent->BindAction(SelectDragAction, ETriggerEvent::Started, this, &ARTSPlayerController::OnSelectDragging);
+		EnhancedInputComponent->BindAction(SelectDragAction, ETriggerEvent::Completed, this, &ARTSPlayerController::OnSelectStopDragging);
+		EnhancedInputComponent->BindAction(SelectDragAction, ETriggerEvent::Canceled, this, &ARTSPlayerController::OnSelectStopDragging);
 
 		// Set Destination events
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &ARTSPlayerController::OnInputStarted);
@@ -125,8 +125,11 @@ void ARTSPlayerController::OnSetDestinationReleased()
 				AIController->MoveToLocation(CachedDestination);
 				UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
 			}
+			else
+			{
+				playerPawn->ClearUnitsUnderCommand();
+			}
 		}
-
 		FollowTime = 0.f;
 	}
 }
@@ -146,11 +149,6 @@ void ARTSPlayerController::OnSelectClicked()
 			playerPawn->SetUnitsUnderCommand(TArray<TObjectPtr<APawn>>{selectedPawn});
 		}
 	}
-	else
-	{
-		// clear unit under command if hit other object
-		playerPawn->ClearUnitsUnderCommand();
-	}
 }
 
 void ARTSPlayerController::OnSelectDragging()
@@ -167,6 +165,8 @@ void ARTSPlayerController::OnSelectStopDragging()
 		IHUDInterface::Execute_StopSelection(hud);
 }
 
+
+// camera control functions
 void ARTSPlayerController::ZoomCamera(const FInputActionInstance& Instance)
 {
 	float value = Instance.GetValue().Get<float>();
