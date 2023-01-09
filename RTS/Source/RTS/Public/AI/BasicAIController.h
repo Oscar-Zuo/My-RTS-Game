@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "AI/Formations/BasicFormation.h"
 #include "BasicAIController.generated.h"
 
 /**
@@ -22,7 +23,7 @@ class RTS_API ABasicAIController : public AAIController
 public:
 	ABasicAIController();
 
-	FORCEINLINE bool MoveToLocation(FVector Location);
+	bool MoveToLocation(FVector Location);
 
 protected:
 	virtual void BeginPlay() override;

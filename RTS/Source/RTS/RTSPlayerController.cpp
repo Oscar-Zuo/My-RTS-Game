@@ -12,6 +12,8 @@
 #include "HUD/DefaultHUD.h"
 #include "InputState.h"
 #include "Pawn/BasicCharacter.h"
+#include "AI/Squads/BasicSquad.h"
+#include "AI/Formations/ColumnFormation.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 
@@ -40,8 +42,8 @@ void ARTSPlayerController::BeginPlay()
 	SetViewTarget(playerPawn);
 
 	// set units under control pointer
-	unitsUnderControl = playerPawn->GetUnitsUnderCommand();
-	unitsUnderControlForBlueprint = *unitsUnderControl;
+	squadsUnderControl = playerPawn->GetSquadsUnderCommand();
+	unitsUnderControlForBlueprint = *squadsUnderControl;
 }
 
 void ARTSPlayerController::SetupInputComponent()
@@ -71,12 +73,11 @@ void ARTSPlayerController::SetupInputComponent()
 void ARTSPlayerController::OnInputStarted()
 {
 	// get controlled pawn/unit
-	for (auto& unit : *unitsUnderControl)
+	for (auto& squad : *squadsUnderControl)
 	{
-		if (unit)
-			unit->GetController()->StopMovement();
+		if (squad)
+			squad->StopMovement();
 	}
-
 }
 
 // Triggered every frame when the input is held down
@@ -98,14 +99,14 @@ void ARTSPlayerController::OnSetDestinationTriggered()
 
 	// Move towards mouse pointer
 	// TODO::Form a formation
-	if (unitsUnderControl)
+	if (squadsUnderControl)
 	{
-		for (auto& unit : *unitsUnderControl)
+		for (auto& squad : *squadsUnderControl)
 		{
-			if (unit)
+			if (squad)
 			{
-				FVector WorldDirection = (CachedDestination - unit->GetActorLocation()).GetSafeNormal();
-				unit->AddMovementInput(WorldDirection, 1.0, false);
+				FVector WorldDirection = (CachedDestination - squad->GetLeader()->GetActorLocation()).GetSafeNormal();
+				squad->AddMovementInput(WorldDirection, 1.0, false);
 			}
 		}
 	}
@@ -114,24 +115,26 @@ void ARTSPlayerController::OnSetDestinationTriggered()
 void ARTSPlayerController::OnSetDestinationReleased()
 {
 	// If it was a short press
-	if (FollowTime <= ShortPressThreshold && unitsUnderControl)
+	if (FollowTime <= ShortPressThreshold && squadsUnderControl)
 	{
 		// We move there and spawn some particles
-		for (auto& unit : *unitsUnderControl)
+		for (auto& squad : *squadsUnderControl)
 		{
-			if (unit)
+			if (squad)
 			{
-				TObjectPtr<ABasicAIController> AIController = Cast<ABasicAIController>(unit->GetController());
-				AIController->MoveToLocation(CachedDestination);
-				UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
+				// TODO::Direction need to be decided by player input
+
+				float direction = 0;
+				squad->MoveToLocation(CachedDestination, 0);
 			}
 			else
 			{
-				playerPawn->ClearUnitsUnderCommand();
+				playerPawn->ClearSquadsUnderCommand();
 			}
 		}
-		FollowTime = 0.f;
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
 	}
+	FollowTime = 0.f;
 }
 
 void ARTSPlayerController::OnSelectClicked()
@@ -146,7 +149,7 @@ void ARTSPlayerController::OnSelectClicked()
 		if (selectedPawn->Tags.Contains(FName("Character")))
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT("Mouse Click+++ Actor: %s"), *selectedPawn->GetName()));
-			playerPawn->SetUnitsUnderCommand(TArray<TObjectPtr<APawn>>{selectedPawn});
+			playerPawn->SetSquadsUnderCommand(TArray<TObjectPtr<ABasicSquad>>{Cast<ABasicCharacter>(selectedPawn)->GetSquad()});
 		}
 	}
 }

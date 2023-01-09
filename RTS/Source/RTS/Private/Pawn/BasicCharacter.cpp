@@ -27,6 +27,10 @@ ABasicCharacter::ABasicCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
+	// let characters try to avoid friendlys
+	GetCharacterMovement()->bUseRVOAvoidance = true;
+
+	// set tag for character
 	Tags.Add(FName(TEXT("Character")));
 }
 
@@ -48,4 +52,14 @@ void ABasicCharacter::Tick(float DeltaTime)
 void ABasicCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void ABasicCharacter::SetSquad(const TObjectPtr<ABasicSquad>& _squad)
+{
+	squad = _squad;
+}
+
+TObjectPtr<ABasicSquad> ABasicCharacter::GetSquad() const
+{
+	return squad;
 }

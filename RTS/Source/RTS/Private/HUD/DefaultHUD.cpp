@@ -5,6 +5,7 @@
 #include  "Blueprint/WidgetLayoutLibrary.h"
 #include "CommanderPawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "Pawn/BasicCharacter.h"
 
 ADefaultHUD::ADefaultHUD()
 {
@@ -38,17 +39,20 @@ void ADefaultHUD::DrawHUD()
 			DrawRect(selectionRectColor, pointA.X, pointA.Y, pointB.X - pointA.X, pointB.Y - pointA.Y);
 
 			// get selected pawns
-			TArray<TObjectPtr<APawn>> selectedPawns, selectedUnits;
+			TArray<TObjectPtr<APawn>> selectedPawns;
+			TArray< TObjectPtr <ABasicSquad>> selectedSquad;
+
 			GetActorsInSelectionRectangle<APawn>(pointA, pointB, selectedPawns);
-			selectedUnits.Empty();
 			for (auto& pawn : selectedPawns)
 			{
 				if (pawn->Tags.Contains(FName("Character")))
 				{
-					selectedUnits.Add(pawn);
+					auto squad = Cast<ABasicCharacter>(pawn)->GetSquad();
+					if (squad && selectedSquad.Contains(squad))
+						selectedSquad.Add(squad);
 				}
 			}
-			Cast<ACommanderPawn>(GetOwningPawn())->SetUnitsUnderCommand(selectedUnits);
+			Cast<ACommanderPawn>(GetOwningPawn())->SetSquadsUnderCommand(selectedSquad);
 		}
 	}
 }

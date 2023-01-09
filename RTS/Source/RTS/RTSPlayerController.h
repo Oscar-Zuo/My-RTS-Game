@@ -3,12 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Templates/SubclassOf.h"
 #include "GameFramework/PlayerController.h"
 #include "InputActionValue.h"
 #include "InputAction.h"
-#include "Camera/CameraActor.h"
 #include "Public/CommanderPawn.h"
+#include "AI/Squads/BasicSquad.h"
 #include "RTSPlayerController.generated.h"
 
 /** Forward declaration to improve compiling times */
@@ -18,6 +17,7 @@ UCLASS()
 class ARTSPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+
 
 public:
 	ARTSPlayerController();
@@ -49,7 +49,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* SelectDragAction;
 
-
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
@@ -57,7 +56,7 @@ protected:
 	virtual void SetupInputComponent() override;
 	
 	// To add mapping context
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 
 	/** Input handlers for SetDestination action. */
 	void OnInputStarted();
@@ -75,11 +74,11 @@ protected:
 	
 	// Controlled Pawns
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Debug)
-	TArray<TObjectPtr<APawn>>* unitsUnderControl;
+	TArray<TObjectPtr<ABasicSquad>>* squadsUnderControl;
 
 	// sadly blueprint doesn't accept a pointer to TArray
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Debug)
-	TArray<TObjectPtr<APawn>> unitsUnderControlForBlueprint;
+	TArray<TObjectPtr<ABasicSquad>> unitsUnderControlForBlueprint;
 
 private:
 	FVector CachedDestination;

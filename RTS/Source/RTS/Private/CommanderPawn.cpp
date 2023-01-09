@@ -8,6 +8,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Pawn/BasicPawn.h"
+#include "AI/Squads/BasicSquad.h"
+#include "AI/Formations/BasicFormation.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 
 // Sets default values
@@ -49,25 +51,30 @@ ACommanderPawn::ACommanderPawn()
 	cameraRotateSpeed = 1.5;
 
 	// Nothing selected yet, clear the array
-	unitsUnderCommand.Empty();
+	squadsUnderCommand.Empty();
 }
 
-void ACommanderPawn::SetUnitsUnderCommand(const TArray<TObjectPtr<APawn>>& _unitsUnderCommand)
+void ACommanderPawn::SetSquadsUnderCommand(const TArray<TObjectPtr<ABasicSquad>>& _unitsUnderCommand)
 {
 	if (_unitsUnderCommand.IsEmpty())
-		unitsUnderCommand.Empty();
+		squadsUnderCommand.Empty();
 	else
-		unitsUnderCommand = _unitsUnderCommand;
+		squadsUnderCommand = _unitsUnderCommand;
 }
 
-TArray<TObjectPtr<APawn>>* ACommanderPawn::GetUnitsUnderCommand()
+TArray<TObjectPtr<ABasicSquad>>* ACommanderPawn::GetSquadsUnderCommand()
 {
-	return &unitsUnderCommand;
+	return &squadsUnderCommand;
 }
 
-void ACommanderPawn::ClearUnitsUnderCommand()
+void ACommanderPawn::ClearSquadsUnderCommand()
 {
-	unitsUnderCommand.Empty();
+	squadsUnderCommand.Empty();
+}
+
+TMap<TSubclassOf<UBasicFormation>, TObjectPtr<UBasicFormation>> ACommanderPawn::GetAllFormations() const
+{
+	return allFormations;;
 }
 
 // Called when the game starts or when spawned
@@ -75,6 +82,12 @@ void ACommanderPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	playerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+
+	// Create all formation object
+	for (auto formationClass : allFormationClasses)
+	{
+		allFormations.Add(formationClass, NewObject<UBasicFormation>(this, formationClass));
+	}
 }
 
 // Called every frame

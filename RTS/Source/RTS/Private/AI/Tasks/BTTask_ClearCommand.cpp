@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AI/Commands/BTTask_ClearCommand.h"
+#include "AI/Tasks/BTTask_ClearCommand.h"
 #include "AI/BasicAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 

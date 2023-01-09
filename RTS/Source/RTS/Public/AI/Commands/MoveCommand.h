@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AI/Commands/BasicCommand.h"
+#include "AI/Formations/BasicFormation.h"
 #include "MoveCommand.generated.h"
 
 /**
