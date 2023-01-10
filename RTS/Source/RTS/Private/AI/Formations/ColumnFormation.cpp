@@ -16,7 +16,7 @@ TArray<FVector2D> UColumnFormation::GetLocationList(int num, float direction, FV
 	FVector2D space = FVector2D(spaceBetweenUnits.X, 0).GetRotated(direction);
 	for (int i = 0; i < num; i++)
 	{
-		locationList[i] = location + space * i;
+		locationList.Add(location + space * i);
 	}
 	return locationList;
 }

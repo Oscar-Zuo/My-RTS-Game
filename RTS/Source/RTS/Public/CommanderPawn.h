@@ -47,7 +47,7 @@ public:
 	FORCEINLINE void ClearSquadsUnderCommand();
 
 	// formaiton object getter
-	FORCEINLINE TMap<TSubclassOf<UBasicFormation>, TObjectPtr<UBasicFormation>> GetAllFormations() const;
+	FORCEINLINE TMap<FName, TObjectPtr<UBasicFormation>> GetAllFormations() const;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -86,5 +86,5 @@ protected:
 		TArray<TSubclassOf<UBasicFormation>> allFormationClasses;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		TMap<TSubclassOf<UBasicFormation>, TObjectPtr<UBasicFormation>> allFormations;
+		TMap<FName, TObjectPtr<UBasicFormation>> allFormations;
 };

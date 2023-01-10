@@ -5,6 +5,13 @@
 			"guid": "00000000000000000000000000000000",
 			"description": "Default Uncontrolled Changelist",
 			"files": [
+				"C:/Users/u1418006/Desktop/My-RTS-Game/RTS/Content/Blueprints/Squads/BP_BasicSquad.uasset",
+				"C:/Users/u1418006/Desktop/My-RTS-Game/RTS/Content/__ExternalActors__/TopDown/Maps/TopDownMap/3/YL/WT5USVLNTXE5Z4K8ONP831.uasset",
+				"C:/Users/u1418006/Desktop/My-RTS-Game/RTS/Content/__ExternalActors__/TopDown/Maps/TopDownMap/C/MB/GE0GVGR96XP5Y39YK86GHE.uasset",
+				"C:/Users/u1418006/Desktop/My-RTS-Game/RTS/Content/Blueprints/Characters/BP_BasicSoldier.uasset",
+				"C:/Users/u1418006/Desktop/My-RTS-Game/RTS/Content/__ExternalActors__/TopDown/Maps/TopDownMap/0/TH/H06ILSX3DXYCDJ5ZK49Q65.uasset",
+				"C:/Users/u1418006/Desktop/My-RTS-Game/RTS/Content/__ExternalActors__/TopDown/Maps/TopDownMap/B/7Q/6GULF34VWEQ8IEW6X7496H.uasset",
+				"C:/Users/u1418006/Desktop/My-RTS-Game/RTS/Content/Blueprints/Formations/BP_ColumnFormation.uasset",
 				"C:/Users/hp/Desktop/My-RTS-Game/RTS/Content/TopDown/Input/IMC_Default.uasset",
 				"C:/Users/hp/Desktop/My-RTS-Game/RTS/Content/Blueprints/MyRTSCameraActor.uasset",
 				"C:/Users/hp/Desktop/My-RTS-Game/RTS/Content/TopDown/Blueprints/BP_TopDownPlayerController.uasset",

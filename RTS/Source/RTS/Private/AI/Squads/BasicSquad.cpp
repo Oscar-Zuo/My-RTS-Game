@@ -81,14 +81,14 @@ void ABasicSquad::MoveToLocation(FVector Location, float direction)
 	{
 		TObjectPtr< ACommanderPawn> playerPawn = (Cast<ACommanderPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)));
 		auto formationsMap = playerPawn->GetAllFormations();
-		formation = formationsMap[defaultformation];
+		formation = formationsMap[defaultformation->GetFName()];
 	}
 
 	// remove all invaild members, we don't want a ghost in the squard
 	RemoveInvalidMembers();
 	FindAndSwapLeader();
 	FVector leaderLocation = GetLeader()->GetActorLocation();
-	TArray<FVector2D> locations2D = formation->GetLocationList(squadMembers.Num(), direction, FVector2D(leaderLocation.X, leaderLocation.Y));
+	TArray<FVector2D> locations2D = formation->GetLocationList(squadMembers.Num(), direction, FVector2D(Location.X, Location.Y));
 	for (int i = 0; i < squadMembers.Num(); i++)
 	{
 		auto unit = squadMembers[i];

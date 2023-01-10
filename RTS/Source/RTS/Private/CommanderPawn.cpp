@@ -72,9 +72,9 @@ void ACommanderPawn::ClearSquadsUnderCommand()
 	squadsUnderCommand.Empty();
 }
 
-TMap<TSubclassOf<UBasicFormation>, TObjectPtr<UBasicFormation>> ACommanderPawn::GetAllFormations() const
+TMap<FName, TObjectPtr<UBasicFormation>> ACommanderPawn::GetAllFormations() const
 {
-	return allFormations;;
+	return allFormations;
 }
 
 // Called when the game starts or when spawned
@@ -86,7 +86,7 @@ void ACommanderPawn::BeginPlay()
 	// Create all formation object
 	for (auto formationClass : allFormationClasses)
 	{
-		allFormations.Add(formationClass, NewObject<UBasicFormation>(this, formationClass));
+		allFormations.Add(formationClass->GetFName(), NewObject<UBasicFormation>(this, formationClass));
 	}
 }
 
