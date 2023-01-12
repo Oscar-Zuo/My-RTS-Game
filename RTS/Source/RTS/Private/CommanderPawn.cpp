@@ -11,6 +11,7 @@
 #include "AI/Squads/BasicSquad.h"
 #include "AI/Formations/BasicFormation.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "BasicLevelScriptActor.h"
 
 // Sets default values
 ACommanderPawn::ACommanderPawn()
@@ -50,6 +51,8 @@ ACommanderPawn::ACommanderPawn()
 	cameraZoomingSpeed = 30.0f;
 	cameraRotateSpeed = 1.5;
 
+	playerID = 0;
+	playerGroup = 0;
 	// Nothing selected yet, clear the array
 	squadsUnderCommand.Empty();
 }
@@ -81,7 +84,13 @@ TMap<FName, TObjectPtr<UBasicFormation>> ACommanderPawn::GetAllFormations() cons
 void ACommanderPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	playerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+
+	// Set player id
+	TObjectPtr<ABasicLevelScriptActor> levelScriptActor = Cast<ABasicLevelScriptActor>(GetWorld()->GetLevelScriptActor());
+	playerID = levelScriptActor->playersNum++;
+	levelScriptActor->playersGroupsMap[playerID] = playerGroup;
+
+	TObjectPtr<APlayerController> playerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
 	// Create all formation object
 	for (auto formationClass : allFormationClasses)

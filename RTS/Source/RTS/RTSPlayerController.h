@@ -80,10 +80,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Debug)
 	TArray<TObjectPtr<ABasicSquad>> unitsUnderControlForBlueprint;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status)
+		int playerID;
+
 private:
-	FVector CachedDestination;
+	FVector CachedDestination, firstClickedDestination;
 	TObjectPtr<ACommanderPawn> playerPawn;
-	float FollowTime; // For how long it has been pressed
 };
 
 

@@ -54,7 +54,8 @@ protected:
 		TObjectPtr< UBasicFormation> formation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
-		TSubclassOf< UBasicFormation> defaultformation;
+		TSubclassOf< UBasicFormation> defaultFormation;
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 };

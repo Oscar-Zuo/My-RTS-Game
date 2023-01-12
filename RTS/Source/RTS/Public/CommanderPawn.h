@@ -25,7 +25,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TObjectPtr<UStaticMeshComponent> pawnCenterSphere;
+		TObjectPtr<USceneComponent> pawnCenterSphere;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TObjectPtr<USceneComponent> pawnSceneComponent;
@@ -48,6 +48,11 @@ public:
 
 	// formaiton object getter
 	FORCEINLINE TMap<FName, TObjectPtr<UBasicFormation>> GetAllFormations() const;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Status)
+		int playerID;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Status)
+		int playerGroup;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -78,8 +83,6 @@ protected:
 	// squards under command
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = GameStatus)
 		TArray<TObjectPtr<ABasicSquad>> squadsUnderCommand;
-
-	TObjectPtr<APlayerController> playerController;
 
 	// formations to use in this game
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

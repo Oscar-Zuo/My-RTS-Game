@@ -10,7 +10,8 @@
 
 ABasicSquad::ABasicSquad()
 {
-	defaultformation = UColumnFormation::StaticClass();
+	defaultFormation = UColumnFormation::StaticClass();
+	CollisionEnabledHasPhysics(ECollisionEnabled::NoCollision);
 }
 
 void ABasicSquad::BeginPlay()
@@ -23,6 +24,19 @@ void ABasicSquad::BeginPlay()
 		{
 			Cast<ABasicCharacter>(unit)->SetSquad(this);
 		}
+	}
+}
+
+void ABasicSquad::Tick(float DeltaSeconds)
+{
+	if (GetLeader())
+		SetActorLocationAndRotation(GetLeader()->GetActorLocation(), GetLeader()->GetActorRotation());
+	else
+		// if there is no one in the squad, just destory it
+	{
+		Destroy();
+		// ask for memeory recycle
+		MarkAsGarbage();
 	}
 }
 
@@ -81,7 +95,7 @@ void ABasicSquad::MoveToLocation(FVector Location, float direction)
 	{
 		TObjectPtr< ACommanderPawn> playerPawn = (Cast<ACommanderPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)));
 		auto formationsMap = playerPawn->GetAllFormations();
-		formation = formationsMap[defaultformation->GetFName()];
+		formation = formationsMap[defaultFormation->GetFName()];
 	}
 
 	// remove all invaild members, we don't want a ghost in the squard

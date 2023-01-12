@@ -13,6 +13,7 @@
  */
 
 class ABasicSquad;
+class UNavModifierComponent;
 
 UCLASS()
 class RTS_API ABasicCharacter : public ACharacter

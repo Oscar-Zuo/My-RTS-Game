@@ -22,7 +22,6 @@ ARTSPlayerController::ARTSPlayerController()
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
 	CachedDestination = FVector::ZeroVector;
-	FollowTime = 0.f;
 	PlayerCameraManagerClass = ARTSPlayerCameraManager::StaticClass();
 }
 
@@ -78,21 +77,25 @@ void ARTSPlayerController::OnInputStarted()
 		if (squad)
 			squad->StopMovement();
 	}
+
+	// Get first clicked location
+	FHitResult Hit;
+
+	// If we hit a surface, cache the location
+	if (GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit))
+	{
+		firstClickedDestination = Hit.Location;
+	}
 }
 
 // Triggered every frame when the input is held down
 void ARTSPlayerController::OnSetDestinationTriggered()
 {
-	// We flag that the input is being pressed
-	FollowTime += GetWorld()->GetDeltaSeconds();
-	
 	// We look for the location in the world where the player has pressed the input
 	FHitResult Hit;
-	bool bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
-
 
 	// If we hit a surface, cache the location
-	if (bHitSuccessful)
+	if (GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit))
 	{
 		CachedDestination = Hit.Location;
 	}
@@ -115,26 +118,41 @@ void ARTSPlayerController::OnSetDestinationTriggered()
 void ARTSPlayerController::OnSetDestinationReleased()
 {
 	// If it was a short press
-	if (FollowTime <= ShortPressThreshold && squadsUnderControl)
+	if (squadsUnderControl)
 	{
 		// We move there and spawn some particles
+
+		// Get direction angle
+		// I know it is stupid to use angle instead of vector, but Unreal only accepts float for GetRotate function
+		float direction = 0;
+
+		FVector2D from = FVector2D(firstClickedDestination.X, firstClickedDestination.Y);
+		FVector2D to = FVector2D(CachedDestination.X, CachedDestination.Y);
+		FVector2D t = (to - from).GetSafeNormal();
+		double temp = abs(FVector2D::CrossProduct(FVector2D(1, 0), t));
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, t.ToString());
+		if (t.X > 0)
+		{
+			direction = FMath::FastAsin(temp) / UE_PI * 180 * (t.Y < 0 ? -1 : 1);
+		}
+		else
+		{
+			direction = (FMath::FastAsin(temp) / UE_PI - 1) * 180 * (t.Y < 0 ? 1 : -1);
+		}
+
 		for (auto& squad : *squadsUnderControl)
 		{
 			if (squad)
 			{
-				// TODO::Direction need to be decided by player input
-
-				float direction = 0;
-				squad->MoveToLocation(CachedDestination, 0);
+				squad->MoveToLocation(firstClickedDestination, direction);
 			}
 			else
 			{
 				playerPawn->ClearSquadsUnderCommand();
 			}
 		}
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, firstClickedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
 	}
-	FollowTime = 0.f;
 }
 
 void ARTSPlayerController::OnSelectClicked()

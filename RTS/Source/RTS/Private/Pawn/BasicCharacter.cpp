@@ -3,6 +3,8 @@
 #include "Pawn/BasicCharacter.h"
 #include "Components/DecalComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "NavModifierComponent.h"
+#include "NavAreas/NavArea_LowHeight.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 
