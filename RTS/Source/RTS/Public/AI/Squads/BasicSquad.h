@@ -33,28 +33,36 @@ public:
 	void AddMovementInput(FVector WorldDirection, float ScaleValue, bool bForce = false);
 	void MoveToLocation(FVector Location, float direction);
 
+	//Spawn All Squad Members, only use it when spawning the squad
+	void SpawnAllSquadMembers();
+
 	FORCEINLINE void RemoveInvalidMembers();
 
 	// squad members functions
 	FORCEINLINE TArray<TObjectPtr< APawn >> GetSquadMemebers() const;
 	FORCEINLINE void SetSquadMembers(const TArray<TObjectPtr< APawn >>& _squad);
 	FORCEINLINE void AddSquadMember(TObjectPtr<APawn> _unit);
-	FORCEINLINE bool SquadMembersContain(TObjectPtr< APawn > _unit) const;
+	FORCEINLINE bool IsSquadMembersContain(TObjectPtr< APawn > _unit) const;
 	FORCEINLINE bool RemoveSquadMember(TObjectPtr<APawn> _unit);
 	
 	// formation getter setter
 	FORCEINLINE TObjectPtr< UBasicFormation> GetFormation() const;
 	FORCEINLINE void SetFormation(const TObjectPtr< UBasicFormation>& _formation);
 protected:
-	// the first index is the squad leader
+	// the first index(0) is the squad leader pointer
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
 		TArray<TObjectPtr< APawn >> squadMembers;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
-		TObjectPtr< UBasicFormation> formation;
+		TArray<TSubclassOf<APawn>> defaultSquadMembersSubclass;
+
+	TMultiMap<TSubclassOf<APawn>, TObjectPtr<APawn>> squadMembersSubclassMap;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
-		TSubclassOf< UBasicFormation> defaultFormation;
+		TObjectPtr<UBasicFormation> formation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
+		TSubclassOf<UBasicFormation> defaultFormation;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;

@@ -102,7 +102,7 @@ void ABasicSquad::MoveToLocation(FVector Location, float direction)
 	RemoveInvalidMembers();
 	FindAndSwapLeader();
 	FVector leaderLocation = GetLeader()->GetActorLocation();
-	TArray<FVector2D> locations2D = formation->GetLocationList(squadMembers.Num(), direction, FVector2D(Location.X, Location.Y));
+	TArray<FVector> locations2D = formation->GetLocationList(squadMembers.Num(), direction, FVector2D(Location.X, Location.Y));
 	for (int i = 0; i < squadMembers.Num(); i++)
 	{
 		auto unit = squadMembers[i];
@@ -110,22 +110,29 @@ void ABasicSquad::MoveToLocation(FVector Location, float direction)
 		if (unit->Tags.Contains(FName(TEXT("Character"))))
 		{
 			unit = Cast<ABasicCharacter>(unit);
-
-			// Need raycast to get the Z coordinate
-			// which is not ideally, but I will try another way later.
-			FVector targetLocation = FVector(locations2D[i].X, locations2D[i].Y, 0);
-			FVector start = FVector(locations2D[i].X, locations2D[i].Y, 2000);
-			FVector end = FVector(locations2D[i].X, locations2D[i].Y, -1000);
-			FCollisionQueryParams collisionPara;
-			collisionPara.MobilityType = EQueryMobilityType::Static;  // all we need is terrain
-			FHitResult hit;
-			if (GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_Visibility, collisionPara))
-			{
-				targetLocation = hit.Location;
-			}
-			Cast<ABasicAIController>(unit->GetController())->MoveToLocation(targetLocation);
+			Cast<ABasicAIController>(unit->GetController())->MoveToLocation(locations2D[i]);
 		}
 	}
+}
+
+void ABasicSquad::SpawnAllSquadMembers()
+{
+	FVector squadLocation = GetActorLocation();
+	
+	//Get locations for every squad member
+	auto locationsList = formation->GetLocationList(defaultSquadMembersSubclass.Num(), 0, FVector2D(squadLocation.X, squadLocation.Y));
+	unsigned int cnt = 0;
+
+	// Spawn squad members and set their locations
+	for (auto unit: defaultSquadMembersSubclass)
+	{
+		TObjectPtr<APawn> newUnit = NewObject<APawn>(GetWorld(), unit->GetFName(), EObjectFlags::RF_NoFlags, unit->StaticClass());
+		squadMembers.Add(newUnit);
+		squadMembersSubclassMap.Add(unit, newUnit);
+		newUnit->SetActorLocationAndRotation(locationsList[cnt], GetActorRotation());
+		cnt++;
+	}
+	
 }
 
 void ABasicSquad::RemoveInvalidMembers()
@@ -164,7 +171,7 @@ void ABasicSquad::AddSquadMember(TObjectPtr<APawn> _unit)
 	}
 }
 
-bool ABasicSquad::SquadMembersContain(TObjectPtr<APawn> _unit) const
+bool ABasicSquad::IsSquadMembersContain(TObjectPtr<APawn> _unit) const
 {
 	return squadMembers.Contains(_unit);
 }

@@ -130,7 +130,6 @@ void ARTSPlayerController::OnSetDestinationReleased()
 		FVector2D to = FVector2D(CachedDestination.X, CachedDestination.Y);
 		FVector2D t = (to - from).GetSafeNormal();
 		double temp = abs(FVector2D::CrossProduct(FVector2D(1, 0), t));
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, t.ToString());
 		if (t.X > 0)
 		{
 			direction = FMath::FastAsin(temp) / UE_PI * 180 * (t.Y < 0 ? -1 : 1);

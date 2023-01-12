@@ -3,7 +3,7 @@
 
 #include "AI/Formations/BasicFormation.h"
 
-TArray<FVector2D> UBasicFormation::GetLocationList(int num, float direction, FVector2D location)
+TArray<FVector> UBasicFormation::GetLocationList(int num, float direction, FVector2D location)
 {
-	return TArray<FVector2D>();
+	return TArray<FVector>();
 }

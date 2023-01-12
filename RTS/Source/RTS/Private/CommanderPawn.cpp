@@ -88,7 +88,7 @@ void ACommanderPawn::BeginPlay()
 	// Set player id
 	TObjectPtr<ABasicLevelScriptActor> levelScriptActor = Cast<ABasicLevelScriptActor>(GetWorld()->GetLevelScriptActor());
 	playerID = levelScriptActor->playersNum++;
-	levelScriptActor->playersGroupsMap[playerID] = playerGroup;
+	levelScriptActor->playersGroupsMap.Add(playerID, playerGroup);
 
 	TObjectPtr<APlayerController> playerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
