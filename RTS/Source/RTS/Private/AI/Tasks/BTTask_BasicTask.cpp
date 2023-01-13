@@ -40,7 +40,7 @@ EBTNodeResult::Type UBTTask_BasicTask::ExecuteTask(UBehaviorTreeComponent& Owner
 	}
 
 	// call performing funtion
-	bool isTaskSucceed;
+	bool isTaskSucceed = false;
 	switch (commandObject->commandTypes)
 	{
 	case NormalCommand:

@@ -18,6 +18,28 @@ void ABasicSquad::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// need to wait for commander pawn finishing beginplay function
+	TObjectPtr< ACommanderPawn> playerPawn = Cast<ACommanderPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!playerPawn->HasActorBegunPlay())
+	{
+		playerPawn->DispatchBeginPlay();
+	}
+
+	// if no formation is setted for this squad, use the default formation
+	if (!formation)
+	{
+		auto formationsMap = playerPawn->GetAllFormations();
+		formation = formationsMap[defaultFormation->GetFName()];
+		// TODO:: add match failure situation
+	}
+
+	// spawn squad members if it is empty
+	if (squadMembers.Num() == 0)
+	{
+		SpawnAllSquadMembers();
+	}
+
+	// Set squad for squadMembers
 	for (auto unit : squadMembers)
 	{
 		if (unit && unit->Tags.Contains("Character"))
@@ -67,13 +89,14 @@ bool ABasicSquad::SetLeader(const TObjectPtr<APawn>& _leader)
 
 void ABasicSquad::FindAndSwapLeader()
 {
-	// Maybe I need to change the squadMemebers to priority queue later? O(n) is not good enough for us
+	// Maybe I need to change the squadMemebers to priority queue later? O(n) is not good enough
 	int index = 0;
 	for (auto unit : squadMembers)
 	{
 		if (unit && unit->Tags.Contains(FName(TEXT("Leader"))))
 		{
 			squadMembers.Swap(0, index);
+			break;
 		}
 		index++;
 	}
@@ -90,19 +113,11 @@ void ABasicSquad::AddMovementInput(FVector WorldDirection, float ScaleValue, boo
 
 void ABasicSquad::MoveToLocation(FVector Location, float direction)
 {
-	// if no formation is setted for this squad, use the default formation
-	if (!formation)
-	{
-		TObjectPtr< ACommanderPawn> playerPawn = (Cast<ACommanderPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)));
-		auto formationsMap = playerPawn->GetAllFormations();
-		formation = formationsMap[defaultFormation->GetFName()];
-	}
-
 	// remove all invaild members, we don't want a ghost in the squard
 	RemoveInvalidMembers();
 	FindAndSwapLeader();
 	FVector leaderLocation = GetLeader()->GetActorLocation();
-	TArray<FVector> locations2D = formation->GetLocationList(squadMembers.Num(), direction, FVector2D(Location.X, Location.Y));
+	TArray<FVector> locationsList = formation->GetLocationList(squadMembers.Num(), direction, FVector2D(Location.X, Location.Y));
 	for (int i = 0; i < squadMembers.Num(); i++)
 	{
 		auto unit = squadMembers[i];
@@ -110,7 +125,11 @@ void ABasicSquad::MoveToLocation(FVector Location, float direction)
 		if (unit->Tags.Contains(FName(TEXT("Character"))))
 		{
 			unit = Cast<ABasicCharacter>(unit);
-			Cast<ABasicAIController>(unit->GetController())->MoveToLocation(locations2D[i]);
+
+			// get bounding cylinder to get unit's size
+			float collisionRadius, collisionHalfHeight;
+			unit->GetComponentsBoundingCylinder(collisionRadius, collisionHalfHeight);
+			Cast<ABasicAIController>(unit->GetController())->MoveToLocation(locationsList[i]);
 		}
 	}
 }
@@ -118,21 +137,43 @@ void ABasicSquad::MoveToLocation(FVector Location, float direction)
 void ABasicSquad::SpawnAllSquadMembers()
 {
 	FVector squadLocation = GetActorLocation();
-	
-	//Get locations for every squad member
-	auto locationsList = formation->GetLocationList(defaultSquadMembersSubclass.Num(), 0, FVector2D(squadLocation.X, squadLocation.Y));
-	unsigned int cnt = 0;
+	int totalDefaultSquadMembersNum = 0;
+	for (auto unitsTypeNumPair : defaultSquadMembersNum)
+	{
+		totalDefaultSquadMembersNum += unitsTypeNumPair.Value;
+	}
 
 	// Spawn squad members and set their locations
-	for (auto unit: defaultSquadMembersSubclass)
+
+	struct FActorSpawnParameters spawnPara;
+	spawnPara.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	for (auto unitsTypeNumPair : defaultSquadMembersNum)
 	{
-		TObjectPtr<APawn> newUnit = NewObject<APawn>(GetWorld(), unit->GetFName(), EObjectFlags::RF_NoFlags, unit->StaticClass());
-		squadMembers.Add(newUnit);
-		squadMembersSubclassMap.Add(unit, newUnit);
-		newUnit->SetActorLocationAndRotation(locationsList[cnt], GetActorRotation());
-		cnt++;
+		for (int i = 0; i < unitsTypeNumPair.Value; i++)
+		{
+			TObjectPtr<APawn> newUnit = GetWorld()->SpawnActor<APawn>(unitsTypeNumPair.Key, spawnPara);
+			squadMembers.Add(newUnit);
+		}
 	}
-	
+	FindAndSwapLeader();
+
+	//Get locations for every squad member
+	TArray<float> collisionsRadiusList, collisionsHalfHeightList;
+	for (auto unit: squadMembers)
+	{
+		// get bounding cylinder to get unit's size
+		float collisionRadius, collisionHalfHeight;
+		unit->GetComponentsBoundingCylinder(collisionRadius, collisionHalfHeight);
+		collisionsRadiusList.Add(collisionRadius);
+		collisionsHalfHeightList.Add(collisionHalfHeight);
+	}
+	auto locationsList = formation->GetLocationList(totalDefaultSquadMembersNum, 0, FVector2D(squadLocation.X, squadLocation.Y), collisionsRadiusList);
+
+
+	for (int i = 0; i < squadMembers.Num(); i++)
+	{
+		squadMembers[i]->SetActorLocationAndRotation(locationsList[i], GetActorRotation());
+	}
 }
 
 void ABasicSquad::RemoveInvalidMembers()

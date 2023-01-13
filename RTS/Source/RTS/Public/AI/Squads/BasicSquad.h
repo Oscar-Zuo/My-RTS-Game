@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "CommanderPawn.h"
 #include "BasicSquad.generated.h"
 
 /**
@@ -51,18 +52,20 @@ public:
 protected:
 	// the first index(0) is the squad leader pointer
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
-		TArray<TObjectPtr< APawn >> squadMembers;
+		TArray<TObjectPtr<APawn>> squadMembers;
 
+	// maps bewteen units types and units number
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
-		TArray<TSubclassOf<APawn>> defaultSquadMembersSubclass;
-
-	TMultiMap<TSubclassOf<APawn>, TObjectPtr<APawn>> squadMembersSubclassMap;
+		TMap<TSubclassOf<APawn>, int> defaultSquadMembersNum;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
 		TObjectPtr<UBasicFormation> formation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
 		TSubclassOf<UBasicFormation> defaultFormation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
+		TObjectPtr<ACommanderPawn> squadOwner;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;

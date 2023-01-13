@@ -16,5 +16,6 @@ class RTS_API UColumnFormation : public UBasicFormation
 	
 public:
 	UColumnFormation();
-	TArray<FVector> GetLocationList(int num, float direction, FVector2D location) override;
+	TArray<FVector> GetLocationList(int num, float direction, FVector2D location, float unitBounds = 0) override;
+	TArray<FVector> GetLocationList(int num, float direction, FVector2D location, TArray<float> unitBoundsList) override;
 };

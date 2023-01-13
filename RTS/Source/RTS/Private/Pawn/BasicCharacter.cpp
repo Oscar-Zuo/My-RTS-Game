@@ -40,7 +40,11 @@ ABasicCharacter::ABasicCharacter()
 void ABasicCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	// if there is no controller set
+	if (!GetController())
+	{
+		SpawnDefaultController();
+	}
 }
 
 // Called every frame
