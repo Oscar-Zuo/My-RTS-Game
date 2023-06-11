@@ -22,7 +22,7 @@ TWeakObjectPtr<UFaction> ABasicLevelScriptActor::FindFactionByName(const FName& 
 {
 	for (auto Faction : FactionList)
 	{
-		if (Faction && Faction->Name == name)
+		if (Faction && Faction->Name == name.ToString())
 			return Faction;
 	}
 	return NULL;

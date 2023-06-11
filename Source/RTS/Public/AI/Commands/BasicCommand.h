@@ -19,29 +19,38 @@ enum ECommandTypes
 	TargetLocationCommand	UMETA(DisplayName = "Target is Location Command")
 };
 
+class UBTTask_BasicTask;
+
 UCLASS(Blueprintable)
 class RTS_API UBasicCommand : public UObject
 {
 	GENERATED_BODY()
 	
 public:
-	UBasicCommand();
+	TWeakObjectPtr<UBehaviorTreeComponent> OwnerBehaviorTree;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
 		TEnumAsByte<ECommandTypes> commandTypes;
 
-	virtual bool NormalCommand(UBehaviorTreeComponent& OwnerComp);
-	virtual bool TargetActorCommand(UBehaviorTreeComponent& OwnerComp);
-	virtual bool TargetLocationCommand(UBehaviorTreeComponent& OwnerComp);
+	TWeakObjectPtr<UBTTask_BasicTask> Task;
 
-	FORCEINLINE FVector GetTargetLocation() const;
-	FORCEINLINE void SetTargetLocation(FVector _targetLocation);
-	FORCEINLINE TObjectPtr<AActor> GetTargetActor() const;
-	FORCEINLINE void SetTargetActor(TObjectPtr<AActor> _targetActor);
+public:
+	UBasicCommand();
+
+	virtual EBTNodeResult::Type NormalCommand(UBehaviorTreeComponent& OwnerComp);
+	virtual EBTNodeResult::Type TargetActorCommand(UBehaviorTreeComponent& OwnerComp);
+	virtual EBTNodeResult::Type TargetLocationCommand(UBehaviorTreeComponent& OwnerComp);
+
+	FORCEINLINE virtual FVector GetTargetLocation() const;
+	FORCEINLINE virtual void SetTargetLocation(FVector _targetLocation);
+	FORCEINLINE virtual TObjectPtr<AActor> GetTargetActor() const;
+	FORCEINLINE virtual void SetTargetActor(TObjectPtr<AActor> _targetActor);
+	FORCEINLINE virtual void StopCommand(EBTNodeResult::Type result);
+	FORCEINLINE virtual void AbortCommand();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
-		FVector targetLocation;
+		FVector TargetLocation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
-		TObjectPtr<AActor> targetActor;
+		TObjectPtr<AActor>TargetActor;
 };

@@ -19,14 +19,7 @@ class RTS_API ABasicAIController : public AAIController
 {
 	GENERATED_BODY()
 
-public:
-	ABasicAIController();
-
-	bool MoveToLocation(FVector Location);
-
 protected:
-	virtual void BeginPlay() override;
-	virtual void OnPossess(APawn* InPawn) override;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = true))
 		TObjectPtr<UBehaviorTree> BehaviorTree;
 
@@ -37,4 +30,14 @@ protected:
 		TObjectPtr<UBlackboardComponent> BlackboardComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 		bool canBeSelect;
+
+public:
+	ABasicAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	bool SendMoveToLocationCommand(FVector Location);
+
+protected:
+	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnMoveCompleted(FAIRequestID RequestID, EPathFollowingResult::Type Result) override;
 };

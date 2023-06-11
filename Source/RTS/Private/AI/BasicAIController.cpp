@@ -6,8 +6,10 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AI/Commands/MoveCommand.h"
+#include "Navigation/CrowdFollowingComponent.h"
 
-ABasicAIController::ABasicAIController()
+ABasicAIController::ABasicAIController(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UCrowdFollowingComponent>(TEXT("PathFollowingComponent")))
 {
 	BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("Behavior Tree Component"));
 	BlackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("Blackboard Component"));
@@ -35,12 +37,40 @@ void ABasicAIController::OnPossess(APawn* InPawn)
 	}
 }
 
-bool ABasicAIController::MoveToLocation(FVector Location)
+void ABasicAIController::OnMoveCompleted(FAIRequestID RequestID, EPathFollowingResult::Type Result)
 {
-	TWeakObjectPtr<UMoveCommand> command = NewObject<UMoveCommand>(this, UMoveCommand::StaticClass());
+	TObjectPtr<UMoveCommand> command = Cast<UMoveCommand>(BlackboardComponent->GetValueAsObject(FName(TEXT("NewCommand"))));
+	if (!command)
+		return;
+	EBTNodeResult::Type TaskResult;
+	switch (Result)
+	{
+	case EPathFollowingResult::Success:
+		TaskResult = EBTNodeResult::Succeeded;
+		break;
+	case EPathFollowingResult::Blocked:
+		TaskResult = EBTNodeResult::Failed;
+		break;
+	case EPathFollowingResult::OffPath:
+		TaskResult = EBTNodeResult::Failed;
+		break;
+	case EPathFollowingResult::Aborted:
+		command->AbortCommand();
+		return;
+	case EPathFollowingResult::Invalid:
+		TaskResult = EBTNodeResult::Failed;
+	default:
+		return;
+	}
+	command->StopCommand(TaskResult);
+}
+
+bool ABasicAIController::SendMoveToLocationCommand(FVector Location)
+{
+	TObjectPtr<UMoveCommand> command = NewObject<UMoveCommand>(this, UMoveCommand::StaticClass());
 	command->SetTargetLocation(Location);
 	command->commandTypes = ECommandTypes::TargetLocationCommand;
+	command->OwnerBehaviorTree = BehaviorTreeComponent;
 	BlackboardComponent->SetValueAsObject(FName(TEXT("NewCommand")), command.Get());
-
 	return true;
 }

@@ -29,7 +29,7 @@ class RTS_API UFaction : public UObject
 public:
 	TEnumAsByte<EFactionRelationship> DefaultRelationship;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName Name;
+	FString Name;
 
 protected:
 	TMap<TObjectPtr<UFaction>, TEnumAsByte<EFactionRelationship>>  RelationshipMap;

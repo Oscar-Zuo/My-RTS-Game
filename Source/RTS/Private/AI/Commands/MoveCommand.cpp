@@ -11,12 +11,14 @@ UMoveCommand::UMoveCommand()
 	acceptableRadius = 5.0f;
 }
 
-bool UMoveCommand::TargetLocationCommand(UBehaviorTreeComponent& OwnerComp)
+EBTNodeResult::Type UMoveCommand::TargetLocationCommand(UBehaviorTreeComponent& OwnerComp)
 {
 	TObjectPtr<AAIController> controller = OwnerComp.GetAIOwner();
-	EPathFollowingRequestResult::Type result = controller->MoveToLocation(targetLocation, acceptableRadius);
+	EPathFollowingRequestResult::Type result = controller->MoveToLocation(TargetLocation, acceptableRadius);
 	if (result == EPathFollowingRequestResult::Failed)
-		return false;
+		return EBTNodeResult::Failed;
+	if (result == EPathFollowingRequestResult::AlreadyAtGoal)
+		return EBTNodeResult::Succeeded;
 	else
-		return true;
+		return EBTNodeResult::InProgress;
 }

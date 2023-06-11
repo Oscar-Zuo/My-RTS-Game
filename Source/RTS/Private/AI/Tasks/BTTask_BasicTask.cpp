@@ -40,31 +40,39 @@ EBTNodeResult::Type UBTTask_BasicTask::ExecuteTask(UBehaviorTreeComponent& Owner
 	}
 
 	// call performing funtion
-	bool isTaskSucceed = false;
+	commandObject.Get()->Task = this;
+	EBTNodeResult::Type bIsTaskSucceed = EBTNodeResult::Failed;
 	switch (commandObject->commandTypes)
 	{
 	case NormalCommand:
-		isTaskSucceed = commandObject->NormalCommand(OwnerComp);
+		bIsTaskSucceed = commandObject->NormalCommand(OwnerComp);
 		break;
 	case TargetLocationCommand:
-		isTaskSucceed = commandObject->TargetLocationCommand(OwnerComp);
+		bIsTaskSucceed = commandObject->TargetLocationCommand(OwnerComp);
 		break;
 	case TargetActorCommand:
-		isTaskSucceed = commandObject->TargetActorCommand(OwnerComp);
+		bIsTaskSucceed = commandObject->TargetActorCommand(OwnerComp);
 		break;
 	};
 
-	if (!isTaskSucceed)
+	if (bIsTaskSucceed != EBTNodeResult::InProgress)
 	{
-		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
-		return EBTNodeResult::Failed;
+		FinishLatentTask(OwnerComp, bIsTaskSucceed);
 	}
-	
-	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-	return EBTNodeResult::Succeeded;
+	return bIsTaskSucceed;
 }
 
 FString UBTTask_BasicTask::GetStaticDescription() const
 {
 	return FString::Printf(TEXT("Perform Task"));
+}
+
+void UBTTask_BasicTask::StopTask(UBehaviorTreeComponent& OwnerComp, EBTNodeResult::Type Result)
+{
+	FinishLatentTask(OwnerComp, Result);
+}
+
+void UBTTask_BasicTask::AbortTask(UBehaviorTreeComponent& OwnerComp)
+{
+	FinishLatentAbort(OwnerComp);
 }

@@ -29,7 +29,7 @@ EBTNodeResult::Type UBTTask_TestBlackboardBase::ExecuteTask(UBehaviorTreeCompone
 	}
 
 	// get our destination and nav system
-	const FVector targetLocation{ AIController->GetBlackboardComponent()->GetValueAsVector(FName(TEXT("TargetLocation"))) };
+	const FVector TargetLocation{ AIController->GetBlackboardComponent()->GetValueAsVector(FName(TEXT("TargetLocation"))) };
 	const UNavigationSystemV1* navSystem{ UNavigationSystemV1::GetCurrent(GetWorld()) };
 	if (!IsValid(navSystem))
 	{
@@ -38,7 +38,7 @@ EBTNodeResult::Type UBTTask_TestBlackboardBase::ExecuteTask(UBehaviorTreeCompone
 	}
 
 	// judge if the location is reachable
-	if (navSystem->FindPathToLocationSynchronously(GetWorld(), AIPawn->GetActorLocation(), targetLocation)->IsValid())
+	if (navSystem->FindPathToLocationSynchronously(GetWorld(), AIPawn->GetActorLocation(), TargetLocation)->IsValid())
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return EBTNodeResult::Failed;

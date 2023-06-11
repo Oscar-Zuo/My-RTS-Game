@@ -1,43 +1,55 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AI/Commands/BasicCommand.h"
+#include "AI/Tasks/BTTask_BasicTask.h"
 
 UBasicCommand::UBasicCommand()
 {
 }
 
-bool UBasicCommand::NormalCommand(UBehaviorTreeComponent& OwnerComp)
+EBTNodeResult::Type UBasicCommand::NormalCommand(UBehaviorTreeComponent& OwnerComp)
 {
-	return false;
+	return EBTNodeResult::Failed;
 }
 
-bool UBasicCommand::TargetActorCommand(UBehaviorTreeComponent& OwnerComp)
+EBTNodeResult::Type UBasicCommand::TargetActorCommand(UBehaviorTreeComponent& OwnerComp)
 {
-	return false;
+	return EBTNodeResult::Failed;
 }
 
-bool UBasicCommand::TargetLocationCommand(UBehaviorTreeComponent& OwnerComp)
+EBTNodeResult::Type UBasicCommand::TargetLocationCommand(UBehaviorTreeComponent& OwnerComp)
 {
-	return false;
+	return EBTNodeResult::Failed;
 }
 
 FVector UBasicCommand::GetTargetLocation() const
 {
-	return targetLocation;
+	return TargetLocation;
 }
 
 void UBasicCommand::SetTargetLocation(FVector _targetLocation)
 {
-	targetLocation = _targetLocation;
+	TargetLocation = _targetLocation;
 }
 
 TObjectPtr<AActor> UBasicCommand::GetTargetActor() const
 {
-	return targetActor;
+	return TargetActor;
 }
 
 void UBasicCommand::SetTargetActor(TObjectPtr<AActor> _targetActor)
 {
-	targetActor = _targetActor;
+	TargetActor = _targetActor;
+}
+
+void UBasicCommand::StopCommand(EBTNodeResult::Type result)
+{
+	if (Task.IsValid() && OwnerBehaviorTree.IsValid())
+		Task.Get()->StopTask(*OwnerBehaviorTree, result);
+}
+
+void UBasicCommand::AbortCommand()
+{
+	if (Task.IsValid() && OwnerBehaviorTree.IsValid())
+		Task.Get()->AbortTask(*OwnerBehaviorTree);
 }

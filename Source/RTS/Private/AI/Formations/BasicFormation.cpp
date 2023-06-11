@@ -17,7 +17,7 @@ FVector UBasicFormation::GetRealLocation(FVector2D planeLocation)
 {
 	// Need raycast to get the Z coordinate
 	// which is not ideally, but I will try another way later.
-	FVector targetLocation = FVector(planeLocation.X, planeLocation.Y, 0);
+	FVector TargetLocation = FVector(planeLocation.X, planeLocation.Y, 0);
 	FVector start = FVector(planeLocation.X, planeLocation.Y, 2000);
 	FVector end = FVector(planeLocation.X, planeLocation.Y, -1000);
 	FCollisionQueryParams collisionPara;
@@ -25,7 +25,7 @@ FVector UBasicFormation::GetRealLocation(FVector2D planeLocation)
 	FHitResult hit;
 	if (GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_Visibility, collisionPara))
 	{
-		targetLocation = hit.Location;
+		TargetLocation = hit.Location;
 	}
-	return targetLocation;
+	return TargetLocation;
 }

@@ -17,7 +17,7 @@ class RTS_API UMoveCommand : public UBasicCommand
 	
 public:
 	UMoveCommand();
-	bool TargetLocationCommand(UBehaviorTreeComponent& OwnerComp) override;
+	EBTNodeResult::Type TargetLocationCommand(UBehaviorTreeComponent& OwnerComp) override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)

@@ -128,7 +128,7 @@ void ABasicSquad::MoveToLocation(FVector Location, FVector2D direction)
 			// get bounding cylinder to get unit's size
 			float collisionRadius, collisionHalfHeight;
 			unit->GetComponentsBoundingCylinder(collisionRadius, collisionHalfHeight);
-			Cast<ABasicAIController>(unit->GetController())->MoveToLocation(locationsList[i]);
+			Cast<ABasicAIController>(unit->GetController())->SendMoveToLocationCommand(locationsList[i]);
 		}
 	}
 }
