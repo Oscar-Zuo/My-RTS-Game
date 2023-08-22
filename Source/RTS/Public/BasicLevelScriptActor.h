@@ -40,9 +40,9 @@ public:
 	// return NULL when can't find
 	TWeakObjectPtr<UFaction> FindFactionByName(const FName& name) const;
 
-	//return false if faction doesn't exit or invaild
-	bool SetAIToFaction(TObjectPtr<UFaction> Faction, TObjectPtr<AAICommanderPawn> AI);
-	bool SetPlayerToFaction(TObjectPtr<UFaction> Faction, TObjectPtr<ACommanderPawn> Player);
+	////return false if faction doesn't exit or invaild
+	//bool SetAIToFaction(TObjectPtr<UFaction> Faction, TObjectPtr<AAICommanderPawn> AI);
+	//bool SetPlayerToFaction(TObjectPtr<UFaction> Faction, TObjectPtr<ACommanderPawn> Player);
 
 	TWeakObjectPtr<UBasicFormation> AddFormation(const TSubclassOf<UBasicFormation> &NewFormation);
 protected:

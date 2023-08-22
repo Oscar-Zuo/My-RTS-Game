@@ -3,6 +3,7 @@
 
 #include "AI/Tasks/BTTask_ClearCommand.h"
 #include "AI/BasicAIController.h"
+#include "AI/Tasks/BTTask_BasicTask.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UBTTask_ClearCommand::UBTTask_ClearCommand()
@@ -27,10 +28,10 @@ EBTNodeResult::Type UBTTask_ClearCommand::ExecuteTask(UBehaviorTreeComponent& Ow
 	}
 
 	// Try to clean the Command UObject
-	TWeakObjectPtr<UObject> command = BlackboardComponent->GetValueAsObject(FName(TEXT("NewCommand")));
+	TWeakObjectPtr<UObject> command = BlackboardComponent->GetValueAsObject(UBTTask_BasicTask::COMMAND_BLACKBOARD_NAME);
 	if (command.IsValid())
 		command->MarkAsGarbage();
-	BlackboardComponent->ClearValue(FName(TEXT("NewCommand")));
+	BlackboardComponent->ClearValue(UBTTask_BasicTask::COMMAND_BLACKBOARD_NAME);
 
 	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	return EBTNodeResult::Succeeded;

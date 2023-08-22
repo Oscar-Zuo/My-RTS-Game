@@ -10,11 +10,26 @@
 /**
  * 
  */
+
+class ABasicSquad;
+class ACommanderPawn;
+
 UCLASS(Blueprintable)
 class RTS_API ADefaultHUD : public AHUD, public IHUDInterface
 {
 	GENERATED_BODY()
 	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
+		FLinearColor selectionRectColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
+		float selectionRectAlpha;
+private:
+	bool bIsDrawing, bHasSelectionStopped;
+	// PointA: coordinate of cursor when start draging
+	FVector2D pointA, StopPosition;
+	TWeakObjectPtr<ACommanderPawn> PlayerPawn;
+
 public:
 	ADefaultHUD();
 
@@ -22,11 +37,10 @@ public:
 	void StopSelection_Implementation() override;
 	void DrawHUD() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
-		FLinearColor selectionRectColor;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = States)
-		float selectionRectAlpha;
+protected:
+	virtual void BeginPlay() override;
+
 private:
-	bool isDrawing;
-	FVector2D pointA, pointB;
+	TArray< TWeakObjectPtr <ABasicSquad>> GetSelectedSquad();
+	FORCEINLINE FVector2D GetCurrentCursorInScreenPosition() const;
 };

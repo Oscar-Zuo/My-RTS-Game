@@ -40,4 +40,5 @@ void ABasicLevelScriptActor::BeginPlay()
 	{
 		AllFormationsMap.FindOrAdd(formationClass->GetFName(), NewObject<UBasicFormation>(this, formationClass));
 	}
+	Super::BeginPlay();
 }

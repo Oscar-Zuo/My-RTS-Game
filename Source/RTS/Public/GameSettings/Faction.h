@@ -21,7 +21,7 @@ enum EFactionRelationship
 class ACommanderPawn;
 class AAICommanderPawn;
 
-UCLASS()
+UCLASS(BlueprintType)
 class RTS_API UFaction : public UObject
 {
 	GENERATED_BODY()
@@ -32,21 +32,23 @@ public:
 	FString Name;
 
 protected:
-	TMap<TObjectPtr<UFaction>, TEnumAsByte<EFactionRelationship>>  RelationshipMap;
-	TArray<TObjectPtr<ACommanderPawn>> PlayerList;
-	TArray<TObjectPtr<AAICommanderPawn>> AIList;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<TObjectPtr<UFaction>, TEnumAsByte<EFactionRelationship>> RelationshipMap;
+	TArray<TWeakObjectPtr<ACommanderPawn>> PlayerList;
+	TArray<TWeakObjectPtr<AAICommanderPawn>> AIList;
 
 public:
 	UFaction();
 
-	FORCEINLINE TArray<TObjectPtr<ACommanderPawn>> GetPlayerList() const;
-	FORCEINLINE void AddPlayer(const TObjectPtr<ACommanderPawn>& player);
-	FORCEINLINE void AddPlayers(const TArray<TObjectPtr<ACommanderPawn>>& newPlayerList);
-	FORCEINLINE bool RemovePlayer(const TObjectPtr<ACommanderPawn>& player);
-	FORCEINLINE bool ContainsPlayer(const TObjectPtr<ACommanderPawn>& player);
-	FORCEINLINE TArray<TObjectPtr<AAICommanderPawn>> GetAIList() const;
-	FORCEINLINE void AddAI(const TObjectPtr<AAICommanderPawn>& AI);
-	FORCEINLINE void AddAIs(const TArray<TObjectPtr<AAICommanderPawn>>& newAIList);
-	FORCEINLINE bool RemoveAI(const TObjectPtr<AAICommanderPawn>& AI);
-	FORCEINLINE bool ContainsAI(const TObjectPtr<AAICommanderPawn>& AI);
+	FORCEINLINE TArray<TWeakObjectPtr<ACommanderPawn>> GetPlayerList() const;
+	FORCEINLINE void AddPlayer(const TWeakObjectPtr<ACommanderPawn>& player);
+	FORCEINLINE void AddPlayers(const TArray<TWeakObjectPtr<ACommanderPawn>>& newPlayerList);
+	FORCEINLINE bool RemovePlayer(const TWeakObjectPtr<ACommanderPawn>& player);
+	FORCEINLINE bool ContainsPlayer(const TWeakObjectPtr<ACommanderPawn>& player);
+	FORCEINLINE TArray<TWeakObjectPtr<AAICommanderPawn>> GetAIList() const;
+	FORCEINLINE void AddAI(const TWeakObjectPtr<AAICommanderPawn>& AI);
+	FORCEINLINE void AddAIs(const TArray<TWeakObjectPtr<AAICommanderPawn>>& newAIList);
+	FORCEINLINE bool RemoveAI(const TWeakObjectPtr<AAICommanderPawn>& AI);
+	FORCEINLINE bool ContainsAI(const TWeakObjectPtr<AAICommanderPawn>& AI);
+	FORCEINLINE TEnumAsByte<EFactionRelationship> GetRelationshipBetweenFactions(TWeakObjectPtr<UFaction> TargetFaction);
 };

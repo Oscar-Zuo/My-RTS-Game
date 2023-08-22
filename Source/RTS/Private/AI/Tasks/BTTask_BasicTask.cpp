@@ -6,34 +6,36 @@
 #include "AI/BasicAIController.h"
 #include "AI/Commands/BasicCommand.h"
 
+const FName UBTTask_BasicTask::COMMAND_BLACKBOARD_NAME(TEXT("NewCommand"));
+
 UBTTask_BasicTask::UBTTask_BasicTask()
 {
 	NodeName = TEXT("Perform Basic Task");
-
+	
 	// add filter for blackboard key
-	BlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_BasicTask, BlackboardKey), ABasicAIController::StaticClass());
+	// BlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_BasicTask, BlackboardKey), ABasicAIController::StaticClass());
 }
 
 EBTNodeResult::Type UBTTask_BasicTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	// Get Controller, Pawn and BlackBoard
-	TObjectPtr<ABasicAIController> AIController{ Cast< ABasicAIController>(OwnerComp.GetAIOwner()) };
-	if (!IsValid(AIController))
+	TWeakObjectPtr<ABasicAIController> AIController{ Cast< ABasicAIController>(OwnerComp.GetAIOwner()) };
+	if (!AIController.IsValid())
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return EBTNodeResult::Failed;
 	}
 
-	const TObjectPtr<APawn> AIPawn{ AIController->GetPawn() };
-	if (!IsValid(AIPawn))
+	const TWeakObjectPtr<APawn> AIPawn{ AIController->GetPawn() };
+	if (!AIPawn.IsValid())
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return EBTNodeResult::Failed;
 	}
-	TObjectPtr<UBlackboardComponent> BlackboardComponent{ AIController->GetBlackboardComponent() };
+	TWeakObjectPtr<UBlackboardComponent> BlackboardComponent{ AIController->GetBlackboardComponent() };
 
-	TObjectPtr<UBasicCommand> commandObject{ Cast<UBasicCommand>(BlackboardComponent->GetValueAsObject(FName(TEXT("NewCommand")))) };
-	if (!IsValid(commandObject))
+	TWeakObjectPtr<UBasicCommand> commandObject{ Cast<UBasicCommand>(BlackboardComponent->GetValueAsObject(COMMAND_BLACKBOARD_NAME)) };
+	if (!commandObject.IsValid())
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return EBTNodeResult::Failed;
@@ -69,10 +71,11 @@ FString UBTTask_BasicTask::GetStaticDescription() const
 
 void UBTTask_BasicTask::StopTask(UBehaviorTreeComponent& OwnerComp, EBTNodeResult::Type Result)
 {
-	FinishLatentTask(OwnerComp, Result);
+	return FinishLatentTask(OwnerComp, Result);
 }
 
-void UBTTask_BasicTask::AbortTask(UBehaviorTreeComponent& OwnerComp)
+EBTNodeResult::Type UBTTask_BasicTask::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	FinishLatentAbort(OwnerComp);
+	return Super::AbortTask(OwnerComp, NodeMemory);
 }

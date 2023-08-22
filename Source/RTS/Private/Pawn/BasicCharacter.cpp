@@ -1,6 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Pawn/BasicCharacter.h"
+#include "AI/BasicAIController.h"
+#include "AI/Squads/BasicSquad.h"
+#include "GameSettings/Faction.h"
 #include "Components/DecalComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "NavModifierComponent.h"
@@ -29,11 +32,13 @@ ABasicCharacter::ABasicCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
-	// let characters try to avoid friendlys
-	GetCharacterMovement()->bUseRVOAvoidance = true;
-
 	// set tag for character
 	Tags.Add(FName(TEXT("Character")));
+
+	// Initialize character status
+	IsAttacking = false;
+
+	//GetWorldTimerManager().SetTimer(WeaponCountdownTimerHandle, this, &)
 }
 
 // Called when the game starts or when spawned
@@ -60,12 +65,34 @@ void ABasicCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void ABasicCharacter::SetSquad(const TObjectPtr<ABasicSquad>& _squad)
+bool ABasicCharacter::CanBeAttacked_Implementation(TWeakObjectPtr<AActor> Attacker)
 {
-	Squad = _squad;
+	TObjectPtr<ABasicAIController> CharacterController = Cast<ABasicAIController>(GetController());
+	if (!CharacterController)
+		return false;
+	return CharacterController->CanBeAttacked_Implementation(Attacker);
 }
 
-TObjectPtr<ABasicSquad> ABasicCharacter::GetSquad() const
+TEnumAsByte<EAttackResult> ABasicCharacter::ReceiveDamage_Implementation(TWeakObjectPtr<AActor> Attacker, float Damage)
+{
+	TObjectPtr<ABasicAIController> CharacterController = Cast<ABasicAIController>(GetController());
+	if (!CharacterController)
+		return EAttackResult::FAILED;
+
+	return CharacterController->ReceiveDamage_Implementation(Attacker, Damage);
+}
+
+void ABasicCharacter::SetSquad(const TWeakObjectPtr<ABasicSquad>& _squad)
+{
+	Squad = _squad.Get();
+}
+
+TWeakObjectPtr<ABasicSquad> ABasicCharacter::GetSquad() const
 {
 	return Squad;
+}
+
+TWeakObjectPtr<UFaction> ABasicCharacter::GetFaction()
+{
+	return Squad->SquadOwner->Faction;
 }

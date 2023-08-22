@@ -4,21 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "CommanderPawn.h"
 #include "AICommanderPawn.generated.h"
 
 class UFaction;
 
 UCLASS()
-class RTS_API AAICommanderPawn : public APawn
+class RTS_API AAICommanderPawn : public ACommanderPawn
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this pawn's properties
 	AAICommanderPawn();
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Status)
-	TObjectPtr<UFaction> Faction;
 
 protected:
 	// Called when the game starts or when spawned

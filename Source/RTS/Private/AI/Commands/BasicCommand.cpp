@@ -51,5 +51,5 @@ void UBasicCommand::StopCommand(EBTNodeResult::Type result)
 void UBasicCommand::AbortCommand()
 {
 	if (Task.IsValid() && OwnerBehaviorTree.IsValid())
-		Task.Get()->AbortTask(*OwnerBehaviorTree);
+		Task.Get()->AbortTask(*OwnerBehaviorTree, NULL);
 }

@@ -17,9 +17,12 @@ class RTS_API UBTTask_BasicTask : public UBTTask_BlackboardBase
 	GENERATED_BODY()
 
 public:
+	static const FName COMMAND_BLACKBOARD_NAME;
+
+public:
 	UBTTask_BasicTask();
-	void StopTask(UBehaviorTreeComponent& OwnerComp, EBTNodeResult::Type Result);
-	void AbortTask(UBehaviorTreeComponent& OwnerComp);
+	virtual void StopTask(UBehaviorTreeComponent& OwnerComp, EBTNodeResult::Type Result);
+	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 protected:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;

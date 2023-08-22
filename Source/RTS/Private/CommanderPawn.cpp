@@ -57,22 +57,14 @@ ACommanderPawn::ACommanderPawn()
 	Tags.Add(FName(TEXT("Player")));
 }
 
-void ACommanderPawn::SetSquadsUnderCommand(const TArray<TObjectPtr<ABasicSquad>>& _unitsUnderCommand)
+void ACommanderPawn::SpawnSquard(TSubclassOf<ABasicSquad> SquadType, FVector Location, FRotator Rotation)
 {
-	if (_unitsUnderCommand.IsEmpty())
-		SquadsUnderCommand.Empty();
-	else
-		SquadsUnderCommand = _unitsUnderCommand;
-}
-
-TArray<TObjectPtr<ABasicSquad>>* ACommanderPawn::GetSquadsUnderCommand()
-{
-	return &SquadsUnderCommand;
-}
-
-void ACommanderPawn::ClearSquadsUnderCommand()
-{
-	SquadsUnderCommand.Empty();
+	struct FActorSpawnParameters SpawnPara;
+	SpawnPara.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	
+	TObjectPtr<ABasicSquad> NewSquad = GetWorld()->SpawnActor<ABasicSquad>(SquadType, Location, Rotation, SpawnPara);
+	NewSquad->SquadOwner = this;
+	OwnedSquadList.Add(NewSquad);
 }
 
 // Called when the game starts or when spawned

@@ -14,6 +14,7 @@
 #include "Pawn/BasicCharacter.h"
 #include "AI/Squads/BasicSquad.h"
 #include "AI/Formations/ColumnFormation.h"
+#include "GameSettings/Faction.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 
@@ -37,12 +38,8 @@ void ARTSPlayerController::BeginPlay()
 	}
 
 	// set player pawn, normally should be commander pawn
-	playerPawn = Cast<ACommanderPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-	SetViewTarget(playerPawn);
-
-	// set units under control pointer
-	squadsUnderControl = playerPawn->GetSquadsUnderCommand();
-	unitsUnderControlForBlueprint = *squadsUnderControl;
+	OwnerCommandePawn = Cast<ACommanderPawn>(GetPawn());
+	SetViewTarget(OwnerCommandePawn.Get());
 }
 
 void ARTSPlayerController::SetupInputComponent()
@@ -53,43 +50,66 @@ void ARTSPlayerController::SetupInputComponent()
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
 		// Setup mouse input events
-		// Select destination events
+		// Select Actors events
 		EnhancedInputComponent->BindAction(SelectClickAction, ETriggerEvent::Started, this, &ARTSPlayerController::OnSelectClicked);
 		EnhancedInputComponent->BindAction(SelectDragAction, ETriggerEvent::Started, this, &ARTSPlayerController::OnSelectDragging);
 		EnhancedInputComponent->BindAction(SelectDragAction, ETriggerEvent::Completed, this, &ARTSPlayerController::OnSelectStopDragging);
 		EnhancedInputComponent->BindAction(SelectDragAction, ETriggerEvent::Canceled, this, &ARTSPlayerController::OnSelectStopDragging);
 
 		// Set Destination events
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &ARTSPlayerController::OnInputStarted);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &ARTSPlayerController::OnSetDestinationTriggered);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &ARTSPlayerController::OnSetDestinationReleased);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &ARTSPlayerController::OnSetDestinationReleased);
+		EnhancedInputComponent->BindAction(RightKeyClickAction, ETriggerEvent::Started, this, &ARTSPlayerController::OnRightKeyInputStarted);
+		EnhancedInputComponent->BindAction(RightKeyClickAction, ETriggerEvent::Triggered, this, &ARTSPlayerController::OnRightKeyInputTriggered);
+		EnhancedInputComponent->BindAction(RightKeyClickAction, ETriggerEvent::Completed, this, &ARTSPlayerController::OnRightKeyInputReleased);
+		EnhancedInputComponent->BindAction(RightKeyClickAction, ETriggerEvent::Canceled, this, &ARTSPlayerController::OnRightKeyInputReleased);
 		EnhancedInputComponent->BindAction(ZoomCameraAction, ETriggerEvent::Triggered, this, &ARTSPlayerController::ZoomCamera);
 		EnhancedInputComponent->BindAction(RotateCameraAction, ETriggerEvent::Triggered, this, &ARTSPlayerController::RotateCamera);
 	}
 }
 
-void ARTSPlayerController::OnInputStarted()
+TWeakObjectPtr<ABasicCharacter> ARTSPlayerController::TryGetEnemyUnderCursor()
 {
-	// get controlled pawn/unit
-	for (auto& Squad : *squadsUnderControl)
-	{
-		if (Squad)
-			Squad->StopMovement();
-	}
-
 	// Get first clicked location
 	FHitResult Hit;
 
-	// If we hit a surface, cache the location
-	if (GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit))
+	// If we hit a solider, perform attack or follow or something else
+	if (!GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit))
+		return NULL;
+
+	TWeakObjectPtr<ABasicCharacter> HitActor = Cast<ABasicCharacter>(Hit.GetActor());
+	// Be sure the actor is a hostile
+	if (HitActor.IsValid() && OwnerCommandePawn->Faction->GetRelationshipBetweenFactions(HitActor->GetFaction()) == EFactionRelationship::kHostile)
+		return HitActor;
+	return NULL;
+}
+
+void ARTSPlayerController::OnRightKeyInputStarted()
+{
+	// get controlled squad
+	for (auto& Squad : OwnerCommandePawn->SquadsUnderCommand)
 	{
-		firstClickedLocation = Hit.Location;
+		// clear all the commmands
+		if (Squad)
+			Squad->ClearCommands();
 	}
+
+	FHitResult Hit;
+
+	TScriptInterface<IAttackableInterface> Enemy{TryGetEnemyUnderCursor().Get()};
+	
+	// Attack has prority to move
+	if (Enemy.GetObject())
+	{
+		OnAttackInputVerified(Enemy);
+	}
+	// If we hit a surface, cache the location for later use
+	else if (GetHitResultUnderCursor(ECollisionChannel::ECC_WorldStatic, true, Hit))
+	{
+		FirstMoveClickedLocation = Hit.Location;
+	} 
 }
 
 // Triggered every frame when the input is held down
-void ARTSPlayerController::OnSetDestinationTriggered()
+void ARTSPlayerController::OnRightKeyInputTriggered()
 {
 	// We look for the location in the world where the player has pressed the input
 	FHitResult Hit;
@@ -102,41 +122,47 @@ void ARTSPlayerController::OnSetDestinationTriggered()
 
 	// Move towards mouse pointer
 	// TODO::Form a formation
-	if (squadsUnderControl)
+	if (!OwnerCommandePawn->SquadsUnderCommand.IsEmpty())
 	{
-		for (auto& Squad : *squadsUnderControl)
+		for (auto& Squad : OwnerCommandePawn->SquadsUnderCommand)
 		{
-			if (Squad)
-			{
-				FVector WorldDirection = (cachedLoction - Squad->GetLeader()->GetActorLocation()).GetSafeNormal();
-				Squad->AddMovementInput(WorldDirection, 1.0, false);
-			}
+			if (Squad) continue;
+
+			FVector WorldDirection = (cachedLoction - Squad->GetLeader()->GetActorLocation()).GetSafeNormal();
+			Squad->AddMovementInput(WorldDirection, 1.0, false);
 		}
 	}
 }
 
-void ARTSPlayerController::OnSetDestinationReleased()
+void ARTSPlayerController::OnRightKeyInputReleased()
 {
-	if (squadsUnderControl)
-	{
-		// Get direction vector
-		FVector2D from = FVector2D(firstClickedLocation.X, firstClickedLocation.Y);
-		FVector2D to = FVector2D(cachedLoction.X, cachedLoction.Y);
-		FVector2D direction = (to - from).GetSafeNormal();
+	if (OwnerCommandePawn->SquadsUnderCommand.IsEmpty())
+		return;
 
-		for (auto& Squad : *squadsUnderControl)
+	// Get direction vector
+	FVector2D from = FVector2D(FirstMoveClickedLocation.X, FirstMoveClickedLocation.Y);
+	FVector2D to = FVector2D(cachedLoction.X, cachedLoction.Y);
+	FVector2D direction = (to - from).GetSafeNormal();
+
+	for (auto& Squad : OwnerCommandePawn->SquadsUnderCommand)
+	{
+		if (!Squad)
 		{
-			if (Squad)
-			{
-				Squad->MoveToLocation(firstClickedLocation, direction);
-			}
-			else
-			{
-				playerPawn->ClearSquadsUnderCommand();
-			}
+			OwnerCommandePawn->SquadsUnderCommand.Remove(Squad);
+			continue;
 		}
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, firstClickedLocation, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
+			
+		if (FVector2D::Distance(from, to) <= 10)  // Judge if player want squad facing certain direction
+		{
+			FVector LeaderLocation = Squad->GetLeader()->GetActorLocation();
+			// If not, let the squad face the moving direction 
+			direction = (to - FVector2D(LeaderLocation.X, LeaderLocation.Y)).GetSafeNormal();
+		}
+		Squad->MoveToLocation(FirstMoveClickedLocation, direction);
 	}
+
+	// Spawn Cursor
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, FirstMoveClickedLocation, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
 }
 
 void ARTSPlayerController::OnSelectClicked()
@@ -144,15 +170,23 @@ void ARTSPlayerController::OnSelectClicked()
 	FHitResult HitResult;
 	GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, false, HitResult);
 
-	TObjectPtr<APawn> selectedPawn = Cast<APawn>(HitResult.GetActor());
-	if (selectedPawn)
+	TWeakObjectPtr<APawn> selectedPawn = Cast<APawn>(HitResult.GetActor());
+	if (!selectedPawn.IsValid())
+		return;
+
+	// TODO:: Add more pawn types to control and replace the printf to HUD
+	if (selectedPawn.Get()->Tags.Contains(FName("Character")))
 	{
-		// TODO:: Add more pawn types to control and replace the printf to HUD
-		if (selectedPawn->Tags.Contains(FName("Character")))
+		auto SelectedCharacter = Cast<ABasicCharacter>(selectedPawn.Get());
+		if (SelectedCharacter->GetSquad()->CanBeSelectedByCommander(OwnerCommandePawn))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT("Mouse Click+++ Actor: %s"), *selectedPawn->GetName()));
-			playerPawn->SetSquadsUnderCommand(TArray<TObjectPtr<ABasicSquad>>{Cast<ABasicCharacter>(selectedPawn)->GetSquad()});
+			GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT("Mouse Click Actor: %s"), *selectedPawn->GetName()));
+			OwnerCommandePawn->SquadsUnderCommand.Empty();
+			OwnerCommandePawn->SquadsUnderCommand.Add(SelectedCharacter->GetSquad().Get());
 		}
+		else
+			// Clear the squad if selected nothing
+			OwnerCommandePawn->SquadsUnderCommand.Empty();
 	}
 }
 
@@ -170,12 +204,11 @@ void ARTSPlayerController::OnSelectStopDragging()
 		IHUDInterface::Execute_StopSelection(hud);
 }
 
-
 // camera control functions
 void ARTSPlayerController::ZoomCamera(const FInputActionInstance& Instance)
 {
 	float value = Instance.GetValue().Get<float>();
-	playerPawn->ZoomCamera(value);
+	OwnerCommandePawn->ZoomCamera(value);
 }
 
 void ARTSPlayerController::RotateCamera(const FInputActionInstance& Instance)
@@ -183,6 +216,18 @@ void ARTSPlayerController::RotateCamera(const FInputActionInstance& Instance)
 	FVector2D value = Instance.GetValue().Get<FVector2D>();
 	if (value.Y != 0 || value.X != 0)
 	{
-		playerPawn->RotateCamera(FRotator(value.Y, value.X, 0));
+		OwnerCommandePawn->RotateCamera(FRotator(value.Y, value.X, 0));
 	}
+}
+
+void ARTSPlayerController::OnAttackInputVerified(const TScriptInterface<IAttackableInterface>& TargetCharacter)
+{
+	if (!TargetCharacter.GetObject())
+		return;
+
+	TWeakObjectPtr<ABasicCharacter> CharacterObject = Cast< ABasicCharacter>(TargetCharacter.GetObject());
+
+	auto squad = CharacterObject->GetSquad();
+
+	squad->AttackTarget(TargetCharacter);
 }

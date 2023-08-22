@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "CommanderPawn.h"
+#include "Pawn/AttackableInterface.h"
 #include "BasicSquad.generated.h"
 
 /**
@@ -18,6 +19,10 @@ class RTS_API ABasicSquad : public AActor
 {
 	GENERATED_BODY()
 	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
+		TObjectPtr<ACommanderPawn> SquadOwner;
+
 protected:
 	// the first index(0) is the squad leader pointer
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
@@ -33,8 +38,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
 		TSubclassOf<UBasicFormation> DefaultFormation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
-		TObjectPtr<ACommanderPawn> SquadOwner;
 
 public:
 	ABasicSquad();
@@ -48,9 +51,15 @@ public:
 	// swap the leader to first if possible
 	FORCEINLINE void FindAndSwapLeader();
 
-	// Movement functions for every squad members
+	void ClearCommands();
+
+	// Order functions
+	// Movement functions 
 	void AddMovementInput(FVector WorldDirection, float ScaleValue, bool bForce = false);
 	void MoveToLocation(FVector Location, FVector2D direction);
+
+	// Attack function
+	void AttackTarget(TScriptInterface<IAttackableInterface> TargetCharacter);
 
 	//Spawn All Squad Members, only use it when spawning the squad
 	void SpawnAllSquadMembers();
@@ -68,6 +77,8 @@ public:
 	// formation getter setter
 	FORCEINLINE TWeakObjectPtr< UBasicFormation> GetFormation() const;
 	FORCEINLINE void SetFormation(const TWeakObjectPtr< UBasicFormation>& _formation);
+
+	bool CanBeSelectedByCommander(TWeakObjectPtr<ACommanderPawn> TargetCommander);
 
 protected:
 	virtual void BeginPlay() override;

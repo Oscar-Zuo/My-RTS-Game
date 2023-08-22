@@ -64,8 +64,9 @@ void ABasicSquad::StopMovement()
 {
 	for (auto unit : SquadMembers)
 	{
-		if (unit)
-			unit->GetController()->StopMovement();
+		if (!unit)
+			continue;
+		unit->GetController()->StopMovement();
 	}
 }
 
@@ -97,6 +98,22 @@ void ABasicSquad::FindAndSwapLeader()
 			break;
 		}
 		index++;
+	}
+}
+
+void ABasicSquad::ClearCommands()
+{
+	RemoveInvalidMembers();
+	StopMovement();
+
+	for (auto unit : SquadMembers)
+	{
+		// if it is a solider
+		if (unit->Tags.Contains(FName(TEXT("Character"))))
+		{
+			TWeakObjectPtr<ABasicAIController> CharacterUnit = Cast<ABasicAIController>(unit->GetController());
+			CharacterUnit->StopAndClearAllCommand();
+		}
 	}
 }
 
@@ -133,6 +150,23 @@ void ABasicSquad::MoveToLocation(FVector Location, FVector2D direction)
 	}
 }
 
+void ABasicSquad::AttackTarget(TScriptInterface<IAttackableInterface> TargetCharacter)
+{
+	RemoveInvalidMembers();
+	FindAndSwapLeader();
+
+	for (int i = 0; i < SquadMembers.Num(); i++)
+	{
+		auto unit = SquadMembers[i];
+		if (unit->Tags.Contains(FName(TEXT("Character"))))
+		{
+			TWeakObjectPtr<ABasicCharacter> unitCharacter = Cast<ABasicCharacter>(unit);
+			TWeakObjectPtr< ABasicAIController> unitController = Cast<ABasicAIController>(unit->GetController());
+			unitController->ConfirmAndAttackTarget(TargetCharacter);
+		}
+	}
+}
+
 void ABasicSquad::SpawnAllSquadMembers()
 {
 	FVector squadLocation = GetActorLocation();
@@ -154,6 +188,7 @@ void ABasicSquad::SpawnAllSquadMembers()
 			SquadMembers.Add(newUnit);
 		}
 	}
+	// remember to assign a leader
 	FindAndSwapLeader();
 
 	//Get locations for every squad member
@@ -249,4 +284,11 @@ void ABasicSquad::SetFormation(const TWeakObjectPtr< UBasicFormation>& _formatio
 {
 	if (_formation.IsValid())
 		Formation = _formation.Get();
+}
+
+bool ABasicSquad::CanBeSelectedByCommander(TWeakObjectPtr<ACommanderPawn> TargetCommander)
+{
+	if (!TargetCommander.IsValid())
+		return false;
+	return TargetCommander.Get() == SquadOwner.Get();
 }
