@@ -21,20 +21,8 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 		return EBTNodeResult::Failed;
 	}
 
-	const TWeakObjectPtr<APawn> AIPawn{ AIController->GetPawn() };
-	if (!AIPawn.IsValid())
-	{
-		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
-		return EBTNodeResult::Failed;
-	}
-	
-	TWeakObjectPtr<UBlackboardComponent> BlackboardComponent{ AIController->GetBlackboardComponent() };
-	if (!BlackboardComponent.IsValid())
-	{
-		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
-		return EBTNodeResult::Failed;
-	}
-
+	// Need to let the controller know the pointer of this task, otherwise the controller can't stop it
+	AIController->SetAttackTaskNode(this);
 	AIController->EnableWeapon();
 
 	return EBTNodeResult::InProgress;

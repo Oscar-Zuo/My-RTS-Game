@@ -22,7 +22,7 @@ ABasicAIController::ABasicAIController(const FObjectInitializer& ObjectInitializ
 	CanAttack = true;
 	AttackRange = 50.0f;
 	AttackDamage = 1.0f;
-	AttackInterval = 1000.0f;
+	AttackInterval = 1.0f;
 	Health = 10.0;
 }
 
@@ -97,6 +97,7 @@ void ABasicAIController::StopAndClearAllCommand()
 	if (!command.IsValid())
 		return;
 
+	command->Task->StopTask(*BehaviorTreeComponent, EBTNodeResult::Aborted);
 	command->StopCommand(EBTNodeResult::Succeeded);
 	command->MarkAsGarbage();
 	BlackboardComponent->ClearValue(UBTTask_BasicTask::COMMAND_BLACKBOARD_NAME);
@@ -109,6 +110,22 @@ bool ABasicAIController::ConfirmAndAttackTarget(const TScriptInterface<IAttackab
 	SetAttackTarget(Target);
 
 	return true;
+}
+
+void ABasicAIController::StopAttacking()
+{
+	TObjectPtr<ABasicCharacter> CharacterPawn = Cast<ABasicCharacter>(GetPawn());
+	if (!CharacterPawn)
+		return;
+
+	ClearAttackTarget();
+	if (!AttackTaskNode)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Can't find the attack task node"));
+		return;
+	}
+	
+	AttackTaskNode->StopTask(*BehaviorTreeComponent, EBTNodeResult::Succeeded);
 }
 
 void ABasicAIController::SetAttackTarget(const TScriptInterface<IAttackableInterface>& Target)
@@ -126,8 +143,9 @@ void ABasicAIController::ClearAttackTarget()
 	if (!CharacterPawn)
 		return;
 
-	CharacterPawn->IsAttacking = true;
-	BlackboardComponent->SetValueAsObject(UBTTask_Attack::TARGET_BLACKBOARD_NAME, NULL);
+	CharacterPawn->IsAttacking = false;
+	DisableWeapon();
+	BlackboardComponent->ClearValue(UBTTask_Attack::TARGET_BLACKBOARD_NAME);
 }
 
 void ABasicAIController::PerformAttackTarget()
@@ -140,10 +158,19 @@ void ABasicAIController::PerformAttackTarget()
 
 	TScriptInterface<IAttackableInterface> AttackTarget = BlackboardComponent->GetValueAsObject(UBTTask_Attack::TARGET_BLACKBOARD_NAME);
 
+	if (!AttackTarget)
+	{
+		StopAttacking();
+		return;
+	}
+		
 	auto AttackResult = IAttackableInterface::Execute_ReceiveDamage(AttackTarget.GetObject(), CharacterPawn, AttackDamage);
 	
-	if (AttackResult == EAttackResult::FAILED || EAttackResult::DEAD)
-		DisableWeapon();
+	if (AttackResult == EAttackResult::FAILED || AttackResult == EAttackResult::DEAD)
+	{
+		StopAttacking();
+		return;
+	}
 }
 
 bool ABasicAIController::CanBeAttacked_Implementation(TWeakObjectPtr<AActor> Attacker)
@@ -154,6 +181,9 @@ bool ABasicAIController::CanBeAttacked_Implementation(TWeakObjectPtr<AActor> Att
 TEnumAsByte<EAttackResult> ABasicAIController::ReceiveDamage_Implementation(TWeakObjectPtr<AActor> Attacker, float Damage)
 {
 	Health -= Damage;
+
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT("%s hit %s %f hp!"), *Attacker->GetName(), *GetName(), &Damage));
+
 	if (Health <= 0)
 	{
 		// TODO:: replace this with actual death function
@@ -167,6 +197,11 @@ TEnumAsByte<EAttackResult> ABasicAIController::ReceiveDamage_Implementation(TWea
 	}
 
 	return EAttackResult::HIT;
+}
+
+void ABasicAIController::SetAttackTaskNode(TObjectPtr<UBTTask_Attack> NewAttackTaskNode)
+{
+	AttackTaskNode = NewAttackTaskNode;
 }
 
 void ABasicAIController::EnableWeapon()

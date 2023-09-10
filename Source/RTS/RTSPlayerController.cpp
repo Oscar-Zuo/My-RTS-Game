@@ -225,9 +225,12 @@ void ARTSPlayerController::OnAttackInputVerified(const TScriptInterface<IAttacka
 	if (!TargetCharacter.GetObject())
 		return;
 
-	TWeakObjectPtr<ABasicCharacter> CharacterObject = Cast< ABasicCharacter>(TargetCharacter.GetObject());
+	TWeakObjectPtr<ABasicCharacter> EnemyCharacterObject = Cast< ABasicCharacter>(TargetCharacter.GetObject());
 
-	auto squad = CharacterObject->GetSquad();
+	auto squads = OwnerCommandePawn->SquadsUnderCommand;
 
-	squad->AttackTarget(TargetCharacter);
+	for (auto squad : squads)
+	{
+		squad->AttackTarget(TargetCharacter);
+	}
 }

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include "Pawn/AttackableInterface.h"
-#include "Tasks/BTTask_BasicTask.h"
+#include "Tasks/BTTask_Attack.h"
 #include "BasicAIController.generated.h"
 
 /**
@@ -50,6 +50,7 @@ protected:
 
 private:
 	FTimerHandle WeaponCountdownTimerHandle;
+	TObjectPtr<UBTTask_Attack> AttackTaskNode;
 
 public:
 	ABasicAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
@@ -60,10 +61,12 @@ public:
 
 	// Attack target if possible, returns true if target can be attacked, false if target can't be attacked
 	UFUNCTION(BlueprintCallable)
-		bool ConfirmAndAttackTarget(const TScriptInterface<IAttackableInterface>& Target);
+	bool ConfirmAndAttackTarget(const TScriptInterface<IAttackableInterface>& Target);
 
 	UFUNCTION(BlueprintCallable)
-		void ClearAttackTarget();
+	void StopAttacking();
+
+	void ClearAttackTarget();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	bool CanBeAttacked(AActor* Attacker);
@@ -72,6 +75,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void ReceiveDamage(AActor* Attacker, float Damage);
 	virtual TEnumAsByte<EAttackResult> ReceiveDamage_Implementation(TWeakObjectPtr<AActor> Attacker, float Damage);
+
+	FORCEINLINE void SetAttackTaskNode(TObjectPtr<UBTTask_Attack> NewAttackTaskNode);
 
 	FORCEINLINE virtual void EnableWeapon();
 	FORCEINLINE virtual void DisableWeapon();
@@ -87,4 +92,5 @@ private:
 
 	// Force Attack Target, USE ConfirmAndAttackTarget AT MOST CIRCUMSTANCES
 	virtual void PerformAttackTarget();
+
 };
