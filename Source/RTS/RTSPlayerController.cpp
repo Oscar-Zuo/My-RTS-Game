@@ -93,16 +93,21 @@ void ARTSPlayerController::OnRightKeyInputStarted()
 	}
 
 	FHitResult Hit;
-
-	TScriptInterface<IAttackableInterface> Enemy{TryGetEnemyUnderCursor().Get()};
-	
-	// Attack has prority to move
-	if (Enemy.GetObject())
+	TWeakObjectPtr<APawn> Enemy{ Cast<APawn>(TryGetEnemyUnderCursor().Get()) };
+	if (Enemy.IsValid())
 	{
-		OnAttackInputVerified(Enemy);
+		auto EnemyController{ Enemy->GetController() };
+
+		// Attack has prority to move
+		if (EnemyController->Implements<UAttackableInterface>())
+		{
+			OnAttackInputVerified(EnemyController);
+			return;
+		}
 	}
+	
 	// If we hit a surface, cache the location for later use
-	else if (GetHitResultUnderCursor(ECollisionChannel::ECC_WorldStatic, true, Hit))
+	if (GetHitResultUnderCursor(ECollisionChannel::ECC_WorldStatic, true, Hit))
 	{
 		FirstMoveClickedLocation = Hit.Location;
 	} 
@@ -220,17 +225,15 @@ void ARTSPlayerController::RotateCamera(const FInputActionInstance& Instance)
 	}
 }
 
-void ARTSPlayerController::OnAttackInputVerified(const TScriptInterface<IAttackableInterface>& TargetCharacter)
+void ARTSPlayerController::OnAttackInputVerified(const TScriptInterface<IAttackableInterface>& TargetCharacterController)
 {
-	if (!TargetCharacter.GetObject())
+	if (!TargetCharacterController.GetObject())
 		return;
-
-	TWeakObjectPtr<ABasicCharacter> EnemyCharacterObject = Cast< ABasicCharacter>(TargetCharacter.GetObject());
 
 	auto squads = OwnerCommandePawn->SquadsUnderCommand;
 
 	for (auto squad : squads)
 	{
-		squad->AttackTarget(TargetCharacter);
+		squad->AttackTarget(TargetCharacterController);
 	}
 }

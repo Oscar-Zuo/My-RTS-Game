@@ -11,22 +11,61 @@ UBTTask_Attack::UBTTask_Attack()
 	NodeName = TEXT("Attack Target");
 }
 
-EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+void UBTTask_Attack::StopTask(UBehaviorTreeComponent* OwnerComp, EBTNodeResult::Type Result)
 {
-	// Get Controller, Pawn and BlackBoard
-	TWeakObjectPtr<ABasicAIController> AIController{ Cast< ABasicAIController>(OwnerComp.GetAIOwner()) };
-	if (!AIController.IsValid())
+	auto Controller = Cast<ABasicAIController>(OwnerComp->GetAIOwner());
+
+	Controller->OnAttackTaskFinished.Unbind();
+
+	IAttackableInterface::Execute_DisableWeapons(OwnerComp->GetAIOwner());
+
+	TWeakObjectPtr<UBlackboardComponent> blackBoradComponent = OwnerComp->GetBlackboardComponent();
+	if (blackBoradComponent.IsValid())
 	{
-		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
-		return EBTNodeResult::Failed;
+		TWeakObjectPtr<AActor> target = Cast<AActor>(blackBoradComponent->GetValueAsObject(UBTTask_Attack::TARGET_BLACKBOARD_NAME));
+		if (target.IsValid())
+			IAttackableInterface::Execute_RemoveFromAttackers(target.Get(), OwnerComp->GetAIOwner());
 	}
 
-	// Need to let the controller know the pointer of this task, otherwise the controller can't stop it
-	AIController->SetAttackTaskNode(this);
-	AIController->EnableWeapon();
+	UBTTask_BasicTask::StopTask(OwnerComp, Result);
+}
+
+EBTNodeResult::Type UBTTask_Attack::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+	auto Controller = Cast<ABasicAIController>(OwnerComp.GetAIOwner());
+	Controller->OnAttackTaskFinished.Unbind();
+
+	IAttackableInterface::Execute_DisableWeapons(OwnerComp.GetAIOwner());
+
+	TWeakObjectPtr<UBlackboardComponent> blackBoradComponent = OwnerComp.GetBlackboardComponent();
+	if (blackBoradComponent.IsValid())
+	{
+		TWeakObjectPtr<AActor> target = Cast<AActor>(blackBoradComponent->GetValueAsObject(UBTTask_Attack::TARGET_BLACKBOARD_NAME));
+		if (target.IsValid())
+			IAttackableInterface::Execute_RemoveFromAttackers(target.Get(), OwnerComp.GetAIOwner());
+	}
+
+	return UBTTask_BasicTask::AbortTask(OwnerComp, NodeMemory);
+}
+
+EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+	auto Controller = Cast<ABasicAIController>(OwnerComp.GetAIOwner());
+
+	Controller->OnAttackTaskFinished.BindDynamic(this, &UBTTask_Attack::StopTask);
+	IAttackableInterface::Execute_EnableWeapons(OwnerComp.GetAIOwner());
+
+	TWeakObjectPtr<UBlackboardComponent> blackBoradComponent = OwnerComp.GetBlackboardComponent();
+	if (blackBoradComponent.IsValid())
+	{
+		auto target = blackBoradComponent->GetValueAsObject(UBTTask_Attack::TARGET_BLACKBOARD_NAME);
+		IAttackableInterface::Execute_SetAsAttacker(target, OwnerComp.GetAIOwner());
+	}	
 
 	return EBTNodeResult::InProgress;
 }
+
+
 
 FString UBTTask_Attack::GetStaticDescription() const
 {

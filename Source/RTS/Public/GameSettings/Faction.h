@@ -50,5 +50,5 @@ public:
 	FORCEINLINE void AddAIs(const TArray<TWeakObjectPtr<AAICommanderPawn>>& newAIList);
 	FORCEINLINE bool RemoveAI(const TWeakObjectPtr<AAICommanderPawn>& AI);
 	FORCEINLINE bool ContainsAI(const TWeakObjectPtr<AAICommanderPawn>& AI);
-	FORCEINLINE TEnumAsByte<EFactionRelationship> GetRelationshipBetweenFactions(TWeakObjectPtr<UFaction> TargetFaction);
+	FORCEINLINE EFactionRelationship GetRelationshipBetweenFactions(TWeakObjectPtr<UFaction> TargetFaction);
 };

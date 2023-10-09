@@ -75,11 +75,11 @@ TObjectPtr<APawn> ABasicSquad::GetLeader() const
 	return SquadMembers.IsEmpty() ? NULL : SquadMembers[0];
 }
 
-bool ABasicSquad::SetLeader(const TObjectPtr<APawn>& _leader)
+bool ABasicSquad::SetLeader(const TObjectPtr<APawn>& Leader)
 {
 	// switch new leader to new location
-	if (SquadMembers.Contains(_leader))
-		SquadMembers.Swap(0, SquadMembers.Find(_leader));
+	if (SquadMembers.Contains(Leader))
+		SquadMembers.Swap(0, SquadMembers.Find(Leader.Get()));
 	else
 		// return false when we can't find this pawn in the squad
 		return false;
@@ -150,20 +150,17 @@ void ABasicSquad::MoveToLocation(FVector Location, FVector2D direction)
 	}
 }
 
-void ABasicSquad::AttackTarget(TScriptInterface<IAttackableInterface> TargetCharacter)
+void ABasicSquad::AttackTarget(const TScriptInterface<IAttackableInterface>& Target)
 {
 	RemoveInvalidMembers();
 	FindAndSwapLeader();
 
-	for (int i = 0; i < SquadMembers.Num(); i++)
+	for (auto unit: SquadMembers)
 	{
-		auto unit = SquadMembers[i];
-		if (unit->Tags.Contains(FName(TEXT("Character"))))
-		{
-			TWeakObjectPtr<ABasicCharacter> unitCharacter = Cast<ABasicCharacter>(unit);
-			TWeakObjectPtr< ABasicAIController> unitController = Cast<ABasicAIController>(unit->GetController());
-			unitController->ConfirmAndAttackTarget(TargetCharacter);
-		}
+		TWeakObjectPtr<ABasicCharacter> unitCharacter = Cast<ABasicCharacter>(unit);
+		TWeakObjectPtr<ABasicAIController> unitController = Cast<ABasicAIController>(unit->GetController());
+		if (unitController->Implements<UAttackableInterface>())
+			IAttackableInterface::Execute_ConfirmAndAttackTarget(unitController.Get(), Target.GetObject());
 	}
 }
 
@@ -184,7 +181,7 @@ void ABasicSquad::SpawnAllSquadMembers()
 	{
 		for (int i = 0; i < unitsTypeNumPair.Value; i++)
 		{
-			TObjectPtr<APawn> newUnit = GetWorld()->SpawnActor<APawn>(unitsTypeNumPair.Key, spawnPara);
+			TObjectPtr<ABasicCharacter> newUnit = GetWorld()->SpawnActor<ABasicCharacter>(unitsTypeNumPair.Key, spawnPara);
 			SquadMembers.Add(newUnit);
 		}
 	}
@@ -225,10 +222,10 @@ TArray<TObjectPtr<APawn>> ABasicSquad::GetSquadMemebers() const
 	return SquadMembers;
 }
 
-void ABasicSquad::SetSquadMembers(const TArray<TObjectPtr<APawn>>& _squad)
+void ABasicSquad::SetSquadMembers(const TArray<TObjectPtr<APawn>>& MemberList)
 {
 	SquadMembers.Empty();
-	for (auto unit : _squad)
+	for (auto unit : MemberList)
 	{
 		// set squad for every unit
 		AddSquadMember(unit);
@@ -236,28 +233,28 @@ void ABasicSquad::SetSquadMembers(const TArray<TObjectPtr<APawn>>& _squad)
 	DestorySquadIfEmpty();
 }
 
-void ABasicSquad::AddSquadMember(TObjectPtr<APawn> _unit)
+void ABasicSquad::AddSquadMember(TObjectPtr<APawn> Unit)
 {
-	if (_unit->Tags.Contains(FName(TEXT("Character"))))
+	if (Unit->Tags.Contains(FName(TEXT("Character"))))
 	{
-		Cast<ABasicCharacter>(_unit)->SetSquad(this);
-		if (_unit->Tags.Contains(FName(TEXT("Leader"))))
-			SquadMembers.Insert(_unit, 0);
+		Cast<ABasicCharacter>(Unit)->SetSquad(this);
+		if (Unit->Tags.Contains(FName(TEXT("Leader"))))
+			SquadMembers.Insert(Unit, 0);
 		else
-			SquadMembers.Add(_unit);
+			SquadMembers.Add(Unit);
 	}
 }
 
-bool ABasicSquad::IsSquadMembersContain(TObjectPtr<APawn> _unit) const
+bool ABasicSquad::IsSquadMembersContain(TObjectPtr<APawn> Unit) const
 {
-	return SquadMembers.Contains(_unit);
+	return SquadMembers.Contains(Unit);
 }
 
-bool ABasicSquad::RemoveSquadMember(TObjectPtr<APawn> _unit)
+bool ABasicSquad::RemoveSquadMember(TObjectPtr<APawn> Unit)
 {
-	if (SquadMembers.Contains(_unit))
+	if (SquadMembers.Contains(Unit))
 	{
-		SquadMembers.Remove(_unit);
+		SquadMembers.Remove(Unit);
 		DestorySquadIfEmpty();
 		return true;
 	}
@@ -280,10 +277,10 @@ TWeakObjectPtr<UBasicFormation> ABasicSquad::GetFormation() const
 	return Formation;
 }
 
-void ABasicSquad::SetFormation(const TWeakObjectPtr< UBasicFormation>& _formation)
+void ABasicSquad::SetFormation(const TWeakObjectPtr<UBasicFormation>& NewFormation)
 {
-	if (_formation.IsValid())
-		Formation = _formation.Get();
+	if (NewFormation.IsValid())
+		Formation = NewFormation.Get();
 }
 
 bool ABasicSquad::CanBeSelectedByCommander(TWeakObjectPtr<ACommanderPawn> TargetCommander)

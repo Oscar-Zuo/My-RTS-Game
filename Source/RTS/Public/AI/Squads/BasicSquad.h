@@ -46,7 +46,7 @@ public:
 
 	// setter getter for learder
 	FORCEINLINE TObjectPtr<APawn> GetLeader() const;
-	FORCEINLINE bool SetLeader(const TObjectPtr<APawn>& _learder);
+	FORCEINLINE bool SetLeader(const TObjectPtr<APawn>& Learder);
 	
 	// swap the leader to first if possible
 	FORCEINLINE void FindAndSwapLeader();
@@ -59,7 +59,7 @@ public:
 	void MoveToLocation(FVector Location, FVector2D direction);
 
 	// Attack function
-	void AttackTarget(TScriptInterface<IAttackableInterface> TargetCharacter);
+	void AttackTarget(const TScriptInterface<IAttackableInterface>& Target);
 
 	//Spawn All Squad Members, only use it when spawning the squad
 	void SpawnAllSquadMembers();
@@ -67,16 +67,16 @@ public:
 	FORCEINLINE void RemoveInvalidMembers();
 
 	// squad members functions
-	FORCEINLINE TArray<TObjectPtr< APawn >> GetSquadMemebers() const;
-	FORCEINLINE void SetSquadMembers(const TArray<TObjectPtr< APawn >>& _squad);
-	FORCEINLINE void AddSquadMember(TObjectPtr<APawn> _unit);
-	FORCEINLINE bool IsSquadMembersContain(TObjectPtr< APawn > _unit) const;
-	FORCEINLINE bool RemoveSquadMember(TObjectPtr<APawn> _unit);
+	FORCEINLINE TArray<TObjectPtr<APawn>> GetSquadMemebers() const;
+	FORCEINLINE void SetSquadMembers(const TArray<TObjectPtr<APawn>>& Squad);
+	FORCEINLINE void AddSquadMember(TObjectPtr<APawn> Unit);
+	FORCEINLINE bool IsSquadMembersContain(TObjectPtr<APawn> Unit) const;
+	FORCEINLINE bool RemoveSquadMember(TObjectPtr<APawn> Unit);
 	FORCEINLINE bool DestorySquadIfEmpty();
 	
 	// formation getter setter
 	FORCEINLINE TWeakObjectPtr< UBasicFormation> GetFormation() const;
-	FORCEINLINE void SetFormation(const TWeakObjectPtr< UBasicFormation>& _formation);
+	FORCEINLINE void SetFormation(const TWeakObjectPtr<UBasicFormation>& NewFormation);
 
 	bool CanBeSelectedByCommander(TWeakObjectPtr<ACommanderPawn> TargetCommander);
 

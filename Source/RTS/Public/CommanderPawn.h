@@ -8,7 +8,6 @@
 
 class USpringArmComponent;
 class UCameraComponent;
-class ABasicPawn;
 class UBasicFormation;
 class ABasicSquad;
 class UFaction;

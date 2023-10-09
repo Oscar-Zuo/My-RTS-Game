@@ -45,11 +45,11 @@ void UBasicCommand::SetTargetActor(TObjectPtr<AActor> _targetActor)
 void UBasicCommand::StopCommand(EBTNodeResult::Type result)
 {
 	if (Task.IsValid() && OwnerBehaviorTree.IsValid())
-		Task.Get()->StopTask(*OwnerBehaviorTree, result);
+		Task.Get()->StopTask(OwnerBehaviorTree.Get(), result);
 }
 
 void UBasicCommand::AbortCommand()
 {
 	if (Task.IsValid() && OwnerBehaviorTree.IsValid())
-		Task.Get()->AbortTask(*OwnerBehaviorTree, NULL);
+		Task.Get()->AbortTask(*OwnerBehaviorTree.Get(), NULL);
 }

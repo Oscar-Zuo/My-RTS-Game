@@ -30,7 +30,7 @@ public:
 	TWeakObjectPtr<UBehaviorTreeComponent> OwnerBehaviorTree;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
-		TEnumAsByte<ECommandTypes> commandTypes;
+	TEnumAsByte<ECommandTypes> commandTypes;
 
 	TWeakObjectPtr<UBTTask_BasicTask> Task;
 

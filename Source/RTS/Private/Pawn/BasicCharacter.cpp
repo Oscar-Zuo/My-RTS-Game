@@ -38,7 +38,7 @@ ABasicCharacter::ABasicCharacter()
 	// Initialize character status
 	IsAttacking = false;
 
-	//GetWorldTimerManager().SetTimer(WeaponCountdownTimerHandle, this, &)
+	AIPresecptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception Component"));
 }
 
 // Called when the game starts or when spawned
@@ -63,23 +63,6 @@ void ABasicCharacter::Tick(float DeltaTime)
 void ABasicCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-}
-
-bool ABasicCharacter::CanBeAttacked_Implementation(TWeakObjectPtr<AActor> Attacker)
-{
-	TObjectPtr<ABasicAIController> CharacterController = Cast<ABasicAIController>(GetController());
-	if (!CharacterController)
-		return false;
-	return CharacterController->CanBeAttacked_Implementation(Attacker);
-}
-
-TEnumAsByte<EAttackResult> ABasicCharacter::ReceiveDamage_Implementation(TWeakObjectPtr<AActor> Attacker, float Damage)
-{
-	TObjectPtr<ABasicAIController> CharacterController = Cast<ABasicAIController>(GetController());
-	if (!CharacterController)
-		return EAttackResult::FAILED;
-
-	return CharacterController->ReceiveDamage_Implementation(Attacker, Damage);
 }
 
 void ABasicCharacter::SetSquad(const TWeakObjectPtr<ABasicSquad>& _squad)

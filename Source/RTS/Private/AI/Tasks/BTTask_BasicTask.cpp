@@ -69,9 +69,9 @@ FString UBTTask_BasicTask::GetStaticDescription() const
 	return FString::Printf(TEXT("Perform Task"));
 }
 
-void UBTTask_BasicTask::StopTask(UBehaviorTreeComponent& OwnerComp, EBTNodeResult::Type Result)
+void UBTTask_BasicTask::StopTask(UBehaviorTreeComponent* OwnerComp, EBTNodeResult::Type Result)
 {
-	return FinishLatentTask(OwnerComp, Result);
+	return FinishLatentTask(*OwnerComp, Result);
 }
 
 EBTNodeResult::Type UBTTask_BasicTask::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

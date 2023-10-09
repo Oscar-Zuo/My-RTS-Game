@@ -59,8 +59,8 @@ bool UFaction::ContainsAI(const TWeakObjectPtr<AAICommanderPawn>& AI)
 	return AIList.Contains(AI);
 }
 
-TEnumAsByte<EFactionRelationship> UFaction::GetRelationshipBetweenFactions(TWeakObjectPtr<UFaction> TargetFaction)
+EFactionRelationship UFaction::GetRelationshipBetweenFactions(TWeakObjectPtr<UFaction> TargetFaction)
 {
-	TEnumAsByte<EFactionRelationship>* RelationshipPtr = RelationshipMap.Find(TargetFaction.Get());
-	return RelationshipPtr ? *RelationshipPtr : DefaultRelationship;
+	EFactionRelationship Relationship = RelationshipMap.Find(TargetFaction.Get())->GetValue();
+	return Relationship ? Relationship : DefaultRelationship;
 }

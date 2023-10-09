@@ -21,7 +21,8 @@ public:
 
 public:
 	UBTTask_BasicTask();
-	virtual void StopTask(UBehaviorTreeComponent& OwnerComp, EBTNodeResult::Type Result);
+	UFUNCTION(BlueprintCallable)
+	virtual void StopTask(UBehaviorTreeComponent* OwnerComp, EBTNodeResult::Type Result);
 	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 protected:

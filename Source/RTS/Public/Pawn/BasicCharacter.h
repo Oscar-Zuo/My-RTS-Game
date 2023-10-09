@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputState.h"
 #include "AI/BasicAIController.h"
+#include "Perception/AIPerceptionComponent.h"
 #include "BasicCharacter.generated.h"
 
 /**
@@ -17,7 +18,7 @@ class UNavModifierComponent;
 class UFaction;
 
 UCLASS()
-class RTS_API ABasicCharacter : public ACharacter, public IAttackableInterface
+class RTS_API ABasicCharacter : public ACharacter
 {
 	GENERATED_BODY()
 	
@@ -28,7 +29,11 @@ public:
 protected:
 	// Pointer to its squad
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TObjectPtr<ABasicSquad> Squad;
+	TObjectPtr<ABasicSquad> Squad;
+
+private:
+	UPROPERTY(Category = Character, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAIPerceptionComponent> AIPresecptionComponent;
 
 public:
 	ABasicCharacter();
@@ -38,9 +43,6 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	virtual bool CanBeAttacked_Implementation(TWeakObjectPtr<AActor> Attacker) override;
-	virtual TEnumAsByte<EAttackResult> ReceiveDamage_Implementation(TWeakObjectPtr<AActor> Attacker, float Damage) override;
 
 	FORCEINLINE void SetSquad(const TWeakObjectPtr<ABasicSquad>& _squad);
 	FORCEINLINE TWeakObjectPtr<ABasicSquad> GetSquad() const;

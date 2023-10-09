@@ -7,7 +7,6 @@
 #include <Math/UnrealMathUtility.h>
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
-#include "Pawn/BasicPawn.h"
 #include "AI/Squads/BasicSquad.h"
 #include "AI/Formations/BasicFormation.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
