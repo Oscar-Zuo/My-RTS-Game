@@ -31,9 +31,23 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<ABasicSquad> Squad;
 
-private:
-	UPROPERTY(Category = Character, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UAIPerceptionComponent> AIPresecptionComponent;
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<UMaterialInstanceDynamic> FogOfWarMaterialHiddenInstance;
+
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<UMaterialInstanceDynamic> FogOfWarMaterialRevealInstance;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UMaterialInterface> FogOfWarHiddenMaterial;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UMaterialInterface> FogOfWarRevealMaterial;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UTextureRenderTarget2D> FogOfWarHiddenRender;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UTextureRenderTarget2D> FogOfWarRevealRender;
 
 public:
 	ABasicCharacter();
@@ -43,6 +57,12 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void ClearFogOfWar();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateRevealRadius();
 
 	FORCEINLINE void SetSquad(const TWeakObjectPtr<ABasicSquad>& _squad);
 	FORCEINLINE TWeakObjectPtr<ABasicSquad> GetSquad() const;

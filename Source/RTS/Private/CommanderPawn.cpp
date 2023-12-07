@@ -25,6 +25,7 @@ ACommanderPawn::ACommanderPawn()
 
 	// Create pawn attachment scene component for camera boom
 	PawnSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("CenterSphere"));
+	SetRootComponent(PawnSceneComponent);
 	// Create camera boom
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 

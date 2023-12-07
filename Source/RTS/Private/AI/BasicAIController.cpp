@@ -23,11 +23,14 @@ ABasicAIController::ABasicAIController(const FObjectInitializer& ObjectInitializ
 
 	// Character Statue Initialization
 	CanAttack = true;
+	VisionRadius = 0.05f;
 	AttackRange = 50.0f;
 	WeaponDamage = 1.0f;
 	AttackInterval = 1.0f;
 	Health = 10.0;
 	DamageTypeClass = UDamageType_RegularBullet::StaticClass();
+
+	AIPresecptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception Component"));
 
 	OnTakeAnyDamage.AddDynamic(this, &ABasicAIController::ReceiveDamage);
 }
@@ -45,6 +48,10 @@ void ABasicAIController::BeginPlay()
 	// Initialize the weapon timer
 	// TODO::Move this into a weapon class
 	GetWorldTimerManager().SetTimer(WeaponCountdownTimerHandle, this, &ABasicAIController::PerformAttackTarget, AttackInterval, true);
+	
+	TObjectPtr<ABasicCharacter> character = Cast<ABasicCharacter>(GetPawn());
+	if (character)
+		character->UpdateRevealRadius();
 }
 
 void ABasicAIController::OnPossess(APawn* InPawn)
@@ -120,10 +127,24 @@ bool ABasicAIController::SendMoveToLocationCommand(FVector Location)
 	return true;
 }
 
+
+float ABasicAIController::GetVisionRadius() const
+{
+	return VisionRadius;
+}
+
+void ABasicAIController::SetVisionRadius(float newRadius)
+{
+	VisionRadius = newRadius;
+	TObjectPtr<ABasicCharacter> character = Cast<ABasicCharacter>(GetPawn());
+	if (character)
+		character->UpdateRevealRadius();
+}
+
 void ABasicAIController::StopAndClearAllCommand()
 {
 	TWeakObjectPtr<UBasicCommand> command = Cast<UBasicCommand>(BlackboardComponent->GetValueAsObject(UBTTask_BasicTask::COMMAND_BLACKBOARD_NAME));
-	if (!command.IsValid())
+	if (!command.IsValid() || !command->Task.IsValid())
 		return;
 
 	command->Task->StopTask(BehaviorTreeComponent, EBTNodeResult::Aborted);

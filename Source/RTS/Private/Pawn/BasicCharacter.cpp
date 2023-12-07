@@ -9,6 +9,7 @@
 #include "NavModifierComponent.h"
 #include "NavAreas/NavArea_LowHeight.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetRenderingLibrary.h"
 #include "GameFramework/PlayerController.h"
 
 
@@ -37,8 +38,6 @@ ABasicCharacter::ABasicCharacter()
 
 	// Initialize character status
 	IsAttacking = false;
-
-	AIPresecptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception Component"));
 }
 
 // Called when the game starts or when spawned
@@ -50,19 +49,32 @@ void ABasicCharacter::BeginPlay()
 	{
 		SpawnDefaultController();
 	}
+
+	FogOfWarMaterialHiddenInstance = UMaterialInstanceDynamic::Create(FogOfWarHiddenMaterial, this);
+	FogOfWarMaterialRevealInstance = UMaterialInstanceDynamic::Create(FogOfWarRevealMaterial, this);
+	UKismetRenderingLibrary::ClearRenderTarget2D(this, FogOfWarHiddenRender, FColor::Black);
+	UKismetRenderingLibrary::ClearRenderTarget2D(this, FogOfWarRevealRender, FColor::Black);
 }
 
 // Called every frame
 void ABasicCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	ClearFogOfWar();
 }
 
 // Called to bind functionality to input
 void ABasicCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void ABasicCharacter::UpdateRevealRadius()
+{
+	TObjectPtr<ABasicAIController> controller = Cast<ABasicAIController>(Controller);
+	if (!controller)
+		return;
+	FogOfWarMaterialRevealInstance->SetScalarParameterValue(FName(TEXT("Size")), controller->GetVisionRadius());
 }
 
 void ABasicCharacter::SetSquad(const TWeakObjectPtr<ABasicSquad>& _squad)

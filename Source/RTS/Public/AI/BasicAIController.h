@@ -39,6 +39,9 @@ protected:
 	bool bCanBeSelect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	float VisionRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float Health;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Status")
@@ -61,10 +64,19 @@ protected:
 private:
 	FTimerHandle WeaponCountdownTimerHandle;
 
+	UPROPERTY(Category = Character, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAIPerceptionComponent> AIPresecptionComponent;
+
 public:
 	ABasicAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	bool SendMoveToLocationCommand(FVector Location);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetVisionRadius() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetVisionRadius(float newRadius);
 
 	FORCEINLINE void StopAndClearAllCommand();
 

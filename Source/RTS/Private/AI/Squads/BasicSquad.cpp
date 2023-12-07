@@ -211,7 +211,7 @@ void ABasicSquad::RemoveInvalidMembers()
 {
 	for (auto unit : SquadMembers)
 	{
-		if (!unit)
+		if (!unit || !unit->Controller)
 			SquadMembers.Remove(unit);
 	}
 	DestorySquadIfEmpty();
