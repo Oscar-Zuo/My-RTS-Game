@@ -31,8 +31,6 @@ ABasicAIController::ABasicAIController(const FObjectInitializer& ObjectInitializ
 	DamageTypeClass = UDamageType_RegularBullet::StaticClass();
 
 	AIPresecptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception Component"));
-
-	OnTakeAnyDamage.AddDynamic(this, &ABasicAIController::ReceiveDamage);
 }
 
 void ABasicAIController::BeginPlay()
@@ -48,7 +46,8 @@ void ABasicAIController::BeginPlay()
 	// Initialize the weapon timer
 	// TODO::Move this into a weapon class
 	GetWorldTimerManager().SetTimer(WeaponCountdownTimerHandle, this, &ABasicAIController::PerformAttackTarget, AttackInterval, true);
-	
+	GetWorldTimerManager().PauseTimer(WeaponCountdownTimerHandle);
+
 	TObjectPtr<ABasicCharacter> character = Cast<ABasicCharacter>(GetPawn());
 	if (character)
 		character->UpdateRevealRadius();
@@ -95,18 +94,18 @@ void ABasicAIController::OnMoveCompleted(FAIRequestID RequestID, EPathFollowingR
 
 void ABasicAIController::Dead(TWeakObjectPtr<AActor> Causer)
 {
-	TObjectPtr<ABasicCharacter> CharacterPawn = Cast<ABasicCharacter>(GetPawn());
+	TObjectPtr<ABasicCharacter> CharacterPawn = GetPawn<ABasicCharacter>();
 	if (!CharacterPawn)
 		return;
 
 	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT("%s dead!"), *CharacterPawn->GetName()));
 	
 	// Inform all the attackers the target is dead
-	auto attackersCopy = AttackersController;
-	for (auto attacker : attackersCopy)
+	auto& attackersCopy = AttackersController;
+	for (auto& attacker : attackersCopy)
 	{
 		if (attacker.GetObject())
-			IAttackableInterface::Execute_AttackTargetKilled(attacker.GetObject(), this);
+			IAttackableInterface::Execute_AttackTargetKilled(attacker.GetObject(), CharacterPawn);
 		else
 			AttackersController.Remove(attacker);
 	}
@@ -153,9 +152,13 @@ void ABasicAIController::StopAndClearAllCommand()
 	BlackboardComponent->ClearValue(UBTTask_BasicTask::COMMAND_BLACKBOARD_NAME);
 }
 
-bool ABasicAIController::ConfirmAndAttackTarget_Implementation(const TScriptInterface<IAttackableInterface>& TargetController)
+bool ABasicAIController::ConfirmAndAttackTarget(const TScriptInterface<IAttackableInterface>& TargetController)
 {
-	if (!TargetController || !CanAttack || !IAttackableInterface::Execute_CanBeAttacked(TargetController.GetObject(), this, DamageTypeClass))
+	TObjectPtr<ABasicCharacter> CharacterPawn = GetPawn<ABasicCharacter>();
+	if (!CharacterPawn)
+		return false;
+
+	if (!TargetController || !CanAttack || !IAttackableInterface::Execute_CanBeAttacked(TargetController.GetObject(), CharacterPawn, DamageTypeClass))
 		return false;
 
 	SetAttackTarget(TargetController);
@@ -166,7 +169,7 @@ void ABasicAIController::SetAttackTarget(const TScriptInterface<IAttackableInter
 {
 	ClearAttackTarget();
 
-	TObjectPtr<ABasicCharacter> CharacterPawn = Cast<ABasicCharacter>(GetPawn());
+	TObjectPtr<ABasicCharacter> CharacterPawn = GetPawn<ABasicCharacter>();
 	if (!CharacterPawn)
 		return;
 
@@ -176,7 +179,7 @@ void ABasicAIController::SetAttackTarget(const TScriptInterface<IAttackableInter
 
 void ABasicAIController::ClearAttackTarget()
 {
-	TObjectPtr<ABasicCharacter> CharacterPawn = Cast<ABasicCharacter>(GetPawn());
+	TObjectPtr<ABasicCharacter> CharacterPawn = GetPawn<ABasicCharacter>();
 	if (!CharacterPawn)
 		return;
 
@@ -185,87 +188,115 @@ void ABasicAIController::ClearAttackTarget()
 	OnAttackTaskFinished.ExecuteIfBound(BehaviorTreeComponent, EBTNodeResult::Succeeded);
 }
 
-void ABasicAIController::AttackTargetKilled_Implementation(const TScriptInterface<IAttackableInterface>& DyingTargetController)
+void ABasicAIController::AttackTargetKilled(const TScriptInterface<IAttackableInterface>& DyingTarget)
 {
+	TObjectPtr<ABasicCharacter> CharacterPawn = GetPawn<ABasicCharacter>();
+	if (!CharacterPawn)
+		return;
+
 	TScriptInterface<IAttackableInterface> AttackTargetInterface = BlackboardComponent->GetValueAsObject(UBTTask_Attack::TARGET_BLACKBOARD_NAME);
-	if (!AttackTargetInterface || DyingTargetController.GetObject() != AttackTargetInterface.GetObject())
+	if (!AttackTargetInterface || DyingTarget.GetObject() != AttackTargetInterface.GetObject())
 		return;
 
 	ClearAttackTarget();
 	// TODO:: Switch target function here
+
+	TWeakObjectPtr<ABasicCharacter> DyingCharcter = Cast<ABasicCharacter>(DyingTarget.GetObject());
+	if (!DyingCharcter.IsValid())
+		return;
+
+	auto Squad = DyingCharcter->GetSquad();
+	auto SquadMembers = Squad->GetSquadMemebers();
+	SquadMembers.Remove(DyingCharcter.Get());
+
+	if (!SquadMembers.IsEmpty())
+	{
+		auto nextTarget = SquadMembers[FMath::RandRange(0, SquadMembers.Num() - 1)];
+		IAttackableInterface::Execute_ConfirmAndAttackTarget(CharacterPawn, nextTarget);
+	}
 }
 
 void ABasicAIController::PerformAttackTarget()
+{
+	TObjectPtr<ABasicCharacter> CharacterPawn = GetPawn<ABasicCharacter>();
+	if (!CharacterPawn)
+		return;
+
+	auto TargetUnderAttack = BlackboardComponent->GetValueAsObject(UBTTask_Attack::TARGET_BLACKBOARD_NAME);
+	if (!TargetUnderAttack)
+	{
+		IAttackableInterface::Execute_DisableWeapons(CharacterPawn);
+		ClearAttackTarget();
+		return;
+	}
+
+	IAttackableInterface::Execute_TakeDamage(TargetUnderAttack, WeaponDamage, FDamageEvent(), this, CharacterPawn);
+}
+
+bool ABasicAIController::CanBeAttacked(const TScriptInterface<IAttackableInterface>& Attacker, TSubclassOf<UDamageType> DamageType)
+{
+	return true;
+}
+
+void ABasicAIController::AttackFeedBack(EAttackResult Result, const TScriptInterface<IAttackableInterface>& Target)
+{
+	
+}
+
+void ABasicAIController::OnReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
 	TObjectPtr<ABasicCharacter> CharacterPawn = Cast<ABasicCharacter>(GetPawn());
 	if (!CharacterPawn)
 		return;
 
-	auto AttackTargetController = Cast<AController>(BlackboardComponent->GetValueAsObject(UBTTask_Attack::TARGET_BLACKBOARD_NAME));
-	if (AttackTargetController == nullptr)
-	{
-		IAttackableInterface::Execute_DisableWeapons(this);
-		return;
-	}
-
-	TWeakObjectPtr<APawn> AttackTarget = Cast<APawn>(AttackTargetController->GetPawn());
-	if (!AttackTarget.IsValid() || !AttackTargetController->Implements<UAttackableInterface>())
-	{
-		ClearAttackTarget();
-		return;
-	}
-
-	AttackTargetController->TakeDamage(WeaponDamage, FDamageEvent(), this, CharacterPawn);
-}
-
-bool ABasicAIController::CanBeAttacked_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController, TSubclassOf<UDamageType> DamageType)
-{
-	return true;
-}
-
-void ABasicAIController::AttackFeedBack_Implementation(EAttackResult Result, const TScriptInterface<IAttackableInterface>& TargetController)
-{
-	
-}
-
-void ABasicAIController::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
-{
 	Health -= Damage;
 
 	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT("%s hit %s %f hp!"), *DamageCauser->GetName(), *GetName(), &Damage));
 
 	if (Health <= 0)
 	{
-		IAttackableInterface::Execute_AttackFeedBack(InstigatedBy, EAttackResult::DEAD, this);
+		IAttackableInterface::Execute_AttackFeedBack(DamageCauser, EAttackResult::DEAD, this);
 
 		Dead(DamageCauser);
 		return;
 	}
 
-	IAttackableInterface::Execute_AttackFeedBack(InstigatedBy, EAttackResult::HIT, this);
+	IAttackableInterface::Execute_AttackFeedBack(DamageCauser, EAttackResult::HIT, this);
 }
 
-void ABasicAIController::EnableWeapons_Implementation()
+TScriptInterface<IAttackableInterface> ABasicAIController::GetAttackingTarget() const
+{
+	return BlackboardComponent->GetValueAsObject(UBTTask_Attack::TARGET_BLACKBOARD_NAME);;
+}
+
+void ABasicAIController::EnableWeapons()
 {
 	if (!GetWorldTimerManager().IsTimerActive(WeaponCountdownTimerHandle))
 		GetWorldTimerManager().UnPauseTimer(WeaponCountdownTimerHandle);
 }
 
-void ABasicAIController::DisableWeapons_Implementation()
+void ABasicAIController::DisableWeapons()
 {
 	if (GetWorldTimerManager().IsTimerActive(WeaponCountdownTimerHandle))
 		GetWorldTimerManager().PauseTimer(WeaponCountdownTimerHandle);
 }
 
-void ABasicAIController::SetAsAttacker_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController)
+
+void ABasicAIController::SetAsAttacker(const TScriptInterface<IAttackableInterface>& Attacker)
 {
-	if (!AttackerController.GetObject())
+	if (!Attacker)
 		return;
 	
-	AttackersController.AddUnique(AttackerController);
+	AttackersController.AddUnique(Attacker);
 }
 
-void ABasicAIController::RemoveFromAttackers_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController)
+void ABasicAIController::RemoveFromAttackers(const TScriptInterface<IAttackableInterface>& Attacker)
 {
-	AttackersController.Remove(AttackerController);
+	if (!Attacker)
+	{
+		AttackersController.Remove(nullptr);
+		return;
+	}
+
+	AttackersController.Remove(Attacker);
 }

@@ -119,10 +119,10 @@ void ABasicSquad::ClearCommands()
 
 void ABasicSquad::AddMovementInput(FVector WorldDirection, float ScaleValue, bool bForce)
 {
-	for (auto unit : SquadMembers)
+	for (const auto& Unit : SquadMembers)
 	{
-		if (unit)
-			unit->AddMovementInput(WorldDirection, ScaleValue, bForce);
+		if (Unit)
+			Unit->AddMovementInput(WorldDirection, ScaleValue, bForce);
 	}
 }
 
@@ -131,9 +131,9 @@ void ABasicSquad::MoveToLocation(FVector Location, FVector2D direction)
 	// remove all invaild members, we don't want a ghost in the squard
 	RemoveInvalidMembers();
 	FindAndSwapLeader();
-	FVector leaderLocation = GetLeader()->GetActorLocation();
+	FVector LeaderLocation = GetLeader()->GetActorLocation();
 	
-	TArray<FVector> locationsList = Formation->GetLocationList(SquadMembers.Num(), direction, FVector2D(Location.X, Location.Y));
+	TArray<FVector> LocationsList = Formation->GetLocationList(SquadMembers.Num(), direction, FVector2D(Location.X, Location.Y));
 	for (int i = 0; i < SquadMembers.Num(); i++)
 	{
 		auto unit = SquadMembers[i];
@@ -143,9 +143,9 @@ void ABasicSquad::MoveToLocation(FVector Location, FVector2D direction)
 			unit = Cast<ABasicCharacter>(unit);
 
 			// get bounding cylinder to get unit's size
-			float collisionRadius, collisionHalfHeight;
-			unit->GetComponentsBoundingCylinder(collisionRadius, collisionHalfHeight);
-			Cast<ABasicAIController>(unit->GetController())->SendMoveToLocationCommand(locationsList[i]);
+			float CollisionRadius, collisionHalfHeight;
+			unit->GetComponentsBoundingCylinder(CollisionRadius, collisionHalfHeight);
+			Cast<ABasicAIController>(unit->GetController())->SendMoveToLocationCommand(LocationsList[i]);
 		}
 	}
 }
@@ -158,9 +158,9 @@ void ABasicSquad::AttackTarget(const TScriptInterface<IAttackableInterface>& Tar
 	for (auto unit: SquadMembers)
 	{
 		TWeakObjectPtr<ABasicCharacter> unitCharacter = Cast<ABasicCharacter>(unit);
-		TWeakObjectPtr<ABasicAIController> unitController = Cast<ABasicAIController>(unit->GetController());
-		if (unitController->Implements<UAttackableInterface>())
-			IAttackableInterface::Execute_ConfirmAndAttackTarget(unitController.Get(), Target.GetObject());
+		TWeakObjectPtr<ABasicAIController> unitController = unit->GetController<ABasicAIController>();
+		if (unitCharacter->Implements<UAttackableInterface>())
+			IAttackableInterface::Execute_ConfirmAndAttackTarget(unitCharacter.Get(), Target.GetObject());
 	}
 }
 

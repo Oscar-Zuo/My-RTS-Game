@@ -19,7 +19,7 @@ class UMoveCommand;
 class UBehaviorTreeComponent;
 
 UCLASS(Blueprintable)
-class RTS_API ABasicAIController : public AAIController, public IAttackableInterface
+class RTS_API ABasicAIController : public AAIController
 {
 	GENERATED_BODY()
 
@@ -83,26 +83,29 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ClearAttackTarget();
 
+	UFUNCTION(BlueprintCallable)
+	virtual void OnReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+
+	UFUNCTION(BlueprintCallable)
+	TScriptInterface<IAttackableInterface> GetAttackingTarget() const;
+
 	// Attack interface implementation
 
 	// Attack target if possible, returns true if target can be attacked, false if target can't be attacked
-	virtual bool ConfirmAndAttackTarget_Implementation(const TScriptInterface<IAttackableInterface>& TargetController) override;
-	virtual bool CanBeAttacked_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController, TSubclassOf<UDamageType> DamageType) override;
-	virtual void AttackFeedBack_Implementation(EAttackResult Result, const TScriptInterface<IAttackableInterface>& TargetController) override;
-	virtual void AttackTargetKilled_Implementation(const TScriptInterface<IAttackableInterface>& DyingTargetController) override;
-	FORCEINLINE virtual void EnableWeapons_Implementation() override;
-	FORCEINLINE virtual void DisableWeapons_Implementation() override;
-	FORCEINLINE void SetAsAttacker_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController) override;
-	FORCEINLINE void RemoveFromAttackers_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController) override;
+	virtual bool ConfirmAndAttackTarget(const TScriptInterface<IAttackableInterface>& Target);
+	virtual bool CanBeAttacked(const TScriptInterface<IAttackableInterface>& Attacker, TSubclassOf<UDamageType> DamageType);
+	virtual void AttackFeedBack(EAttackResult Result, const TScriptInterface<IAttackableInterface>& Target);
+	virtual void AttackTargetKilled(const TScriptInterface<IAttackableInterface>& DyingTarget);
+	FORCEINLINE virtual void EnableWeapons();
+	FORCEINLINE virtual void DisableWeapons();
+	FORCEINLINE void SetAsAttacker(const TScriptInterface<IAttackableInterface>& Attacker);
+	FORCEINLINE void RemoveFromAttackers(const TScriptInterface<IAttackableInterface>& Attacker);
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnMoveCompleted(FAIRequestID RequestID, EPathFollowingResult::Type Result) override;
 	virtual void Dead(TWeakObjectPtr<AActor> Causer);
-
-	UFUNCTION(BlueprintCallable)
-	virtual void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 private:
 	// Set Attack Target to be attacked

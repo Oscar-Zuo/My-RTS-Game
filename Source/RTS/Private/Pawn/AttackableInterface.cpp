@@ -43,3 +43,8 @@ void IAttackableInterface::SetAsAttacker_Implementation(const TScriptInterface<I
 void IAttackableInterface::RemoveFromAttackers_Implementation(const TScriptInterface<IAttackableInterface>& Attacker)
 {
 }
+
+float IAttackableInterface::TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	return 0.0f;
+}

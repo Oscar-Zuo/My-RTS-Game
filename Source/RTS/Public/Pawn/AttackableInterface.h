@@ -34,20 +34,20 @@ public:
 	// Attack Interface
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	bool CanAttack(const TScriptInterface<IAttackableInterface>& AttackerController);
-	virtual bool CanAttack_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController);
+	bool CanAttack(const TScriptInterface<IAttackableInterface>& Attacker);
+	virtual bool CanAttack_Implementation(const TScriptInterface<IAttackableInterface>& Attacker);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	bool ConfirmAndAttackTarget(const TScriptInterface<IAttackableInterface>& TargetController);
-	virtual bool ConfirmAndAttackTarget_Implementation(const TScriptInterface<IAttackableInterface>& TargetController);
+	bool ConfirmAndAttackTarget(const TScriptInterface<IAttackableInterface>& Target);
+	virtual bool ConfirmAndAttackTarget_Implementation(const TScriptInterface<IAttackableInterface>& Target);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void AttackFeedBack(EAttackResult Result, const TScriptInterface<IAttackableInterface>& TargetController);
-	virtual void AttackFeedBack_Implementation(EAttackResult Result, const TScriptInterface<IAttackableInterface>& TargetController);
+	void AttackFeedBack(EAttackResult Result, const TScriptInterface<IAttackableInterface>& Target);
+	virtual void AttackFeedBack_Implementation(EAttackResult Result, const TScriptInterface<IAttackableInterface>& Target);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void AttackTargetKilled(const TScriptInterface<IAttackableInterface>& DyingTargetController);
-	virtual void AttackTargetKilled_Implementation(const TScriptInterface<IAttackableInterface>& DyingTargetController);
+	void AttackTargetKilled(const TScriptInterface<IAttackableInterface>& DyingTarget);
+	virtual void AttackTargetKilled_Implementation(const TScriptInterface<IAttackableInterface>& DyingTarget);
 
 	// Used in Attack Task Node, will not check requirements
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
@@ -62,15 +62,19 @@ public:
 	// Reveive Attack Interface
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	bool CanBeAttacked(const TScriptInterface<IAttackableInterface>& AttackerController, TSubclassOf<UDamageType> DamageType);
+	bool CanBeAttacked(const TScriptInterface<IAttackableInterface>& Attacker, TSubclassOf<UDamageType> DamageType);
 	// Returns if the actor can be attack
-	virtual bool CanBeAttacked_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController, TSubclassOf<UDamageType> DamageType);
+	virtual bool CanBeAttacked_Implementation(const TScriptInterface<IAttackableInterface>& Attacker, TSubclassOf<UDamageType> DamageType);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void SetAsAttacker(const TScriptInterface<IAttackableInterface>& AttackerController);
-	virtual void SetAsAttacker_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController);
+	void SetAsAttacker(const TScriptInterface<IAttackableInterface>& Attacker);
+	virtual void SetAsAttacker_Implementation(const TScriptInterface<IAttackableInterface>& Attacker);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void RemoveFromAttackers(const TScriptInterface<IAttackableInterface>& AttackerController);
-	virtual void RemoveFromAttackers_Implementation(const TScriptInterface<IAttackableInterface>& AttackerController);
+	void RemoveFromAttackers(const TScriptInterface<IAttackableInterface>& Attacker);
+	virtual void RemoveFromAttackers_Implementation(const TScriptInterface<IAttackableInterface>& Attacker);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+	virtual float TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 };

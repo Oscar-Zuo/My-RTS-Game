@@ -38,6 +38,8 @@ ABasicCharacter::ABasicCharacter()
 
 	// Initialize character status
 	IsAttacking = false;
+
+	OnTakeAnyDamage.AddDynamic(this, &ABasicCharacter::OnReceiveDamage);
 }
 
 // Called when the game starts or when spawned
@@ -90,4 +92,59 @@ TWeakObjectPtr<ABasicSquad> ABasicCharacter::GetSquad() const
 TWeakObjectPtr<UFaction> ABasicCharacter::GetFaction()
 {
 	return Squad->SquadOwner->Faction;
+}
+
+UFaction* ABasicCharacter::GetFaction_BP()
+{
+	return GetFaction().Get();
+}
+
+bool ABasicCharacter::ConfirmAndAttackTarget_Implementation(const TScriptInterface<IAttackableInterface>& Target)
+{
+	return GetController<ABasicAIController>()->ConfirmAndAttackTarget(Target);
+}
+
+bool ABasicCharacter::CanBeAttacked_Implementation(const TScriptInterface<IAttackableInterface>& Attacker, TSubclassOf<UDamageType> DamageType)
+{
+	return GetController<ABasicAIController>()->CanBeAttacked(Attacker, DamageType);
+}
+
+void ABasicCharacter::AttackFeedBack_Implementation(EAttackResult Result, const TScriptInterface<IAttackableInterface>& Target)
+{
+	GetController<ABasicAIController>()->AttackFeedBack(Result, Target);
+}
+
+void ABasicCharacter::AttackTargetKilled_Implementation(const TScriptInterface<IAttackableInterface>& DyingTarget)
+{
+	GetController<ABasicAIController>()->AttackTargetKilled(DyingTarget);
+}
+
+void ABasicCharacter::EnableWeapons_Implementation()
+{
+	GetController<ABasicAIController>()->EnableWeapons();
+}
+
+void ABasicCharacter::DisableWeapons_Implementation()
+{
+	GetController<ABasicAIController>()->DisableWeapons();
+}
+
+void ABasicCharacter::SetAsAttacker_Implementation(const TScriptInterface<IAttackableInterface>& Attacker)
+{
+	GetController<ABasicAIController>()->SetAsAttacker(Attacker);
+}
+
+void ABasicCharacter::RemoveFromAttackers_Implementation(const TScriptInterface<IAttackableInterface>& Attacker)
+{
+	GetController<ABasicAIController>()->RemoveFromAttackers(Attacker);
+}
+
+float ABasicCharacter::TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	return ACharacter::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+}
+
+void ABasicCharacter::OnReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	GetController<ABasicAIController>()->OnReceiveDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
 }

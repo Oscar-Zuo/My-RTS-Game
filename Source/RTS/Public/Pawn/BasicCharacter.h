@@ -18,7 +18,7 @@ class UNavModifierComponent;
 class UFaction;
 
 UCLASS()
-class RTS_API ABasicCharacter : public ACharacter
+class RTS_API ABasicCharacter : public ACharacter, public IAttackableInterface
 {
 	GENERATED_BODY()
 	
@@ -70,6 +70,25 @@ public:
 	// Helper functions
 	FORCEINLINE TWeakObjectPtr<UFaction> GetFaction();
 
+	// Helper functions
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE UFaction* GetFaction_BP();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void OnReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+
+	// Attack interface implementation
+
+	// Attack target if possible, returns true if target can be attacked, false if target can't be attacked
+	virtual bool ConfirmAndAttackTarget_Implementation(const TScriptInterface<IAttackableInterface>& Target) override;
+	virtual bool CanBeAttacked_Implementation(const TScriptInterface<IAttackableInterface>& Attacker, TSubclassOf<UDamageType> DamageType) override;
+	virtual void AttackFeedBack_Implementation(EAttackResult Result, const TScriptInterface<IAttackableInterface>& Target) override;
+	virtual void AttackTargetKilled_Implementation(const TScriptInterface<IAttackableInterface>& DyingTarget) override;
+	FORCEINLINE virtual void EnableWeapons_Implementation() override;
+	FORCEINLINE virtual void DisableWeapons_Implementation() override;
+	FORCEINLINE void SetAsAttacker_Implementation(const TScriptInterface<IAttackableInterface>& Attacker) override;
+	FORCEINLINE void RemoveFromAttackers_Implementation(const TScriptInterface<IAttackableInterface>& Attacker) override;
+	virtual float TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 protected:
 	// Called when the game starts or when spawned
